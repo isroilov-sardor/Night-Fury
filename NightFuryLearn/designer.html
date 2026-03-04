@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NightFury · 3D Designer</title>
+<link rel="stylesheet" href="assets/style.css">
+<!-- Three.js core -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- OrbitControls - proper orbit/pan/zoom -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- TransformControls - move/rotate/scale gizmos -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+<style>
+html,body { overflow:hidden; height:100%; }
+.des { display:grid; grid-template-columns:200px 1fr 240px; height:calc(100vh - 58px); }
+
+/* ── Left toolbar ── */
+.dtool {
+  background:var(--panel); border-right:2px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto; padding:12px 10px;
+  gap:0;
+}
+.tlbl {
+  font-family:var(--font-mono); font-size:9px; letter-spacing:.2em;
+  color:var(--teal); text-transform:uppercase;
+  padding:5px 4px 4px; margin:10px 0 6px;
+  border-bottom:1px solid var(--border);
+}
+.tlbl:first-child { margin-top:0; }
+
+/* Shape buttons */
+.shgrid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.shbtn {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:10px 4px; background:var(--panel2);
+  border:2px solid var(--border); border-radius:8px;
+  cursor:pointer; color:var(--text2);
+  font-family:var(--font-mono); font-size:9px;
+  transition:all .18s;
+}
+.shbtn:hover { border-color:var(--teal); color:var(--teal); background:rgba(0,212,184,.07); }
+.shbtn span { font-size:20px; }
+
+/* Transform mode buttons */
+.mode-group { display:flex; flex-direction:column; gap:5px; margin-bottom:8px; }
+.mbtn {
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
+  background:var(--panel2); border:2px solid var(--border);
+  border-radius:7px; cursor:pointer; color:var(--text2);
+  font-family:var(--font-ui); font-size:13px; font-weight:600;
+  transition:all .18s; text-align:left;
+}
+.mbtn:hover { border-color:var(--teal); color:var(--teal); }
+.mbtn.on { background:rgba(0,212,184,.12); border-color:var(--teal); color:var(--teal); }
+.mbtn .mk { font-family:var(--font-mono); font-size:9px; color:var(--text3);
+             margin-left:auto; background:var(--panel); padding:2px 5px; border-radius:3px; }
+
+/* Snap toggle */
+.snap-row {
+  display:flex; align-items:center; gap:8px; padding:9px 10px;
+  background:var(--panel2); border:2px solid var(--border);
+  border-radius:7px; cursor:pointer; transition:all .18s;
+  font-family:var(--font-mono); font-size:10px; color:var(--text2);
+}
+.snap-row.on { border-color:var(--orange); color:var(--orange); background:rgba(255,107,43,.1); }
+.snap-dot {
+  width:10px; height:10px; border-radius:50%;
+  border:2px solid var(--text3); transition:all .2s;
+}
+.snap-row.on .snap-dot { background:var(--orange); border-color:var(--orange); }
+
+/* Colour strip */
+.cstrip { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:4px; }
+.csw {
+  width:22px; height:22px; border-radius:5px;
+  border:2px solid transparent; cursor:pointer;
+  transition:transform .15s; flex-shrink:0;
+}
+.csw:hover { transform:scale(1.25); }
+.csw.act { border-color:#fff; }
+
+/* Material buttons */
+.matbtns { display:flex; flex-direction:column; gap:4px; }
+.matbtn {
+  padding:7px 10px; background:var(--panel2); border:2px solid var(--border);
+  border-radius:6px; cursor:pointer; color:var(--text2);
+  font-family:var(--font-mono); font-size:9px; text-align:left; transition:all .18s;
+}
+.matbtn:hover { border-color:var(--sky); color:var(--sky); }
+.matbtn.on { border-color:var(--sky); color:var(--sky); background:rgba(56,189,248,.08); }
+
+.da-btns { margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:6px; }
+
+/* ── Viewport ── */
+.dport { position:relative; background:#060f1a; overflow:hidden; display:flex; flex-direction:column; }
+.dport-inner { position:relative; flex:1; overflow:hidden; }
+#dc { position:absolute; inset:0; width:100% !important; height:100% !important; display:block; }
+
+/* Top bar */
+.dbar {
+  background:rgba(10,20,35,.9); border-bottom:1px solid var(--border);
+  padding:6px 10px; display:flex; align-items:center; gap:4px; flex-shrink:0;
+}
+.dbtn {
+  padding:5px 11px; border-radius:5px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  color:var(--text2); font-family:var(--font-mono); font-size:10px; letter-spacing:.06em;
+  cursor:pointer; transition:all .18s;
+}
+.dbtn:hover { background:rgba(255,255,255,.12); color:var(--text); }
+.dbtn.on    { background:rgba(0,212,184,.15); border-color:var(--teal); color:var(--teal); }
+.dbtn.on-ora{ background:rgba(255,107,43,.15); border-color:var(--orange); color:var(--orange); }
+.dbtn.del   { color:var(--text3); }
+.dbtn.del:hover { border-color:var(--red); color:var(--red); }
+.dsep { width:1px; height:18px; background:rgba(255,255,255,.1); margin:0 3px; }
+
+/* Axis gizmo */
+.dgizmo { position:absolute; top:10px; right:12px; z-index:20; }
+#dgc { display:block; }
+
+/* Status bar */
+.dstatus {
+  background:rgba(10,20,35,.85); border-top:1px solid var(--border);
+  padding:4px 12px; display:flex; gap:20px; align-items:center; flex-shrink:0;
+}
+.dst { font-family:var(--font-mono); font-size:9px; color:var(--text3); letter-spacing:.07em; }
+.dst b { color:var(--teal); }
+
+/* Hint bottom-right */
+.dhint {
+  position:absolute; bottom:32px; right:12px; z-index:20;
+  font-family:var(--font-mono); font-size:9px;
+  color:rgba(255,255,255,.18); letter-spacing:.06em; line-height:2;
+  text-align:right; pointer-events:none;
+}
+
+/* Snap preview */
+.snap-preview {
+  position:absolute; bottom:32px; left:12px; z-index:20;
+  font-family:var(--font-mono); font-size:10px;
+  color:var(--orange); letter-spacing:.1em;
+  pointer-events:none; opacity:0; transition:opacity .3s;
+}
+.snap-preview.show { opacity:1; }
+
+/* ── Properties panel ── */
+.dprops {
+  background:var(--panel); border-left:2px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto; padding:12px 12px;
+}
+.plbl {
+  font-family:var(--font-mono); font-size:9px; letter-spacing:.18em;
+  color:var(--teal); text-transform:uppercase;
+  margin:14px 0 6px; padding-bottom:4px;
+  border-bottom:1px solid var(--border);
+}
+.plbl:first-child { margin-top:0; }
+.prow { display:grid; grid-template-columns:20px 1fr; align-items:center; gap:6px; margin-bottom:6px; }
+.pax { font-family:var(--font-mono); font-size:10px; font-weight:700; }
+.pinp {
+  width:100%; padding:6px 8px;
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:5px; color:var(--text);
+  font-family:var(--font-mono); font-size:11px; outline:none; transition:border-color .2s;
+}
+.pinp:focus { border-color:var(--teal); }
+
+/* Object list */
+.olist { display:flex; flex-direction:column; gap:3px; }
+.oitem {
+  display:flex; align-items:center; gap:7px; padding:7px 9px;
+  border-radius:6px; border:1px solid transparent; cursor:pointer;
+  font-family:var(--font-ui); font-size:12px; font-weight:500;
+  color:var(--text2); transition:all .18s;
+}
+.oitem:hover { background:var(--panel2); color:var(--text); }
+.oitem.act { border-color:rgba(0,212,184,.3); background:rgba(0,212,184,.07); color:var(--teal); }
+.oitem.attached { border-color:rgba(255,107,43,.3); }
+.odot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+.oname { flex:1; }
+.oico  { font-size:9px; color:var(--text3); }
+.odel  { background:none; border:none; cursor:pointer; color:var(--text3); font-size:13px;
+          padding:0 2px; transition:color .2s; }
+.odel:hover { color:var(--red); }
+.oempty { font-family:var(--font-mono); font-size:10px; color:var(--text3);
+           text-align:center; padding:20px 0; line-height:2; letter-spacing:.08em; }
+
+/* Attachment badge */
+.att-badge {
+  display:inline-block; font-family:var(--font-mono); font-size:8px;
+  padding:2px 6px; border-radius:3px;
+  background:rgba(255,107,43,.15); color:var(--orange);
+  border:1px solid rgba(255,107,43,.3); margin-top:4px;
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo">NIGHT<span>FURY</span></div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="courses.html">Courses</a>
+    <a href="viewer.html">3D Library</a>
+    <a href="designer.html" class="active">3D Designer</a>
+  </div>
+  <div class="nav-right">
+    <span id="ocnt" class="nav-badge">0 OBJECTS</span>
+  </div>
+</nav>
+
+<div class="page" style="padding-top:var(--nav-h)">
+<div class="des">
+
+  <!-- ── LEFT TOOLBAR ── -->
+  <div class="dtool">
+    <div class="tlbl">Add Shape</div>
+    <div class="shgrid">
+      <button class="shbtn" onclick="addShape('box')">      <span>⬛</span>Box</button>
+      <button class="shbtn" onclick="addShape('sphere')">   <span>⭕</span>Sphere</button>
+      <button class="shbtn" onclick="addShape('cylinder')"> <span>🔷</span>Cylinder</button>
+      <button class="shbtn" onclick="addShape('cone')">     <span>🔺</span>Cone</button>
+      <button class="shbtn" onclick="addShape('torus')">    <span>〇</span>Torus</button>
+      <button class="shbtn" onclick="addShape('plane')">    <span>▬</span>Plane</button>
+    </div>
+
+    <div class="tlbl">Transform</div>
+    <div class="mode-group">
+      <button class="mbtn on" id="btn-move"   onclick="setMode('translate')">↔ Move   <span class="mk">G</span></button>
+      <button class="mbtn"    id="btn-rotate" onclick="setMode('rotate')">   ↻ Rotate <span class="mk">R</span></button>
+      <button class="mbtn"    id="btn-scale"  onclick="setMode('scale')">    ⤡ Scale  <span class="mk">S</span></button>
+    </div>
+
+    <div class="tlbl">Snap</div>
+    <div class="snap-row" id="snap-toggle" onclick="toggleSnap()">
+      <div class="snap-dot"></div>
+      <span>SNAP TO OBJECTS</span>
+    </div>
+    <div style="margin-top:5px">
+    <div class="snap-row" id="snap-grid" onclick="toggleGridSnap()">
+      <div class="snap-dot"></div>
+      <span>SNAP TO GRID</span>
+    </div>
+    </div>
+
+    <div class="tlbl">Colour</div>
+    <div class="cstrip" id="cstrip"></div>
+
+    <div class="tlbl">Material</div>
+    <div class="matbtns" id="matbtns"></div>
+
+    <div class="da-btns">
+      <button class="btn btn-teal   btn-sm" onclick="saveD()">💾 SAVE</button>
+      <button class="btn btn-ghost  btn-sm" onclick="loadD()">📂 LOAD</button>
+      <button class="btn btn-ghost  btn-sm" onclick="clearD()">🗑 CLEAR</button>
+    </div>
+  </div>
+
+  <!-- ── VIEWPORT ── -->
+  <div class="dport" id="dport">
+    <div class="dbar">
+      <button class="dbtn on" id="db-solid" onclick="setSh('solid')">SOLID</button>
+      <button class="dbtn"    id="db-wire"  onclick="setSh('wire')">WIREFRAME</button>
+      <button class="dbtn"    id="db-xray"  onclick="setSh('xray')">X-RAY</button>
+      <div class="dsep"></div>
+      <button class="dbtn"    id="db-grid"  onclick="tGrid()">GRID</button>
+      <button class="dbtn"    id="db-local" onclick="tLocal()">LOCAL AXES</button>
+      <button class="dbtn"    onclick="rView()">RESET VIEW</button>
+      <button class="dbtn"    onclick="frameAll()">FRAME ALL</button>
+      <div class="dsep"></div>
+      <button class="dbtn del" onclick="delSel()">✕ DELETE</button>
+      <button class="dbtn del" onclick="dupSel()">⧉ DUPLICATE</button>
+      <button class="dbtn"    id="db-att"  onclick="attachSelected()">🔗 ATTACH</button>
+      <button class="dbtn del" onclick="detachSelected()">⛓ DETACH</button>
+    </div>
+    <div class="dport-inner" id="dport-inner">
+      <canvas id="dc"></canvas>
+      <div class="dgizmo"><canvas id="dgc" width="80" height="80"></canvas></div>
+      <div class="dhint">
+        LMB ORBIT<br>RMB PAN<br>SCROLL ZOOM<br>CLICK SELECT<br>G/R/S MODE<br>DEL REMOVE
+      </div>
+      <div class="snap-preview" id="snap-preview">◆ SNAPPED</div>
+    </div>
+    <div class="dstatus">
+      <span class="dst">Objects: <b id="s-objs">0</b></span>
+      <span class="dst">Vertices: <b id="s-verts">0</b></span>
+      <span class="dst">Faces: <b id="s-faces">0</b></span>
+      <span class="dst">Selected: <b id="s-sel">—</b></span>
+      <span class="dst">Mode: <b id="s-mode">TRANSLATE</b></span>
+    </div>
+  </div>
+
+  <!-- ── PROPERTIES PANEL ── -->
+  <div class="dprops">
+    <div class="plbl">Scene Objects</div>
+    <div class="olist" id="olist"><div class="oempty">No objects yet.<br>Add a shape ←</div></div>
+
+    <div class="plbl">Position</div>
+    <div class="prow"><span class="pax" style="color:#ff6666">X</span><input class="pinp" id="px" type="number" step="0.1" value="0" oninput="apP('px')"></div>
+    <div class="prow"><span class="pax" style="color:#66ee66">Y</span><input class="pinp" id="py" type="number" step="0.1" value="0" oninput="apP('py')"></div>
+    <div class="prow"><span class="pax" style="color:#6699ff">Z</span><input class="pinp" id="pz" type="number" step="0.1" value="0" oninput="apP('pz')"></div>
+
+    <div class="plbl">Rotation (°)</div>
+    <div class="prow"><span class="pax" style="color:#ff6666">X</span><input class="pinp" id="rx" type="number" step="1" value="0" oninput="apP('rx')"></div>
+    <div class="prow"><span class="pax" style="color:#66ee66">Y</span><input class="pinp" id="ry" type="number" step="1" value="0" oninput="apP('ry')"></div>
+    <div class="prow"><span class="pax" style="color:#6699ff">Z</span><input class="pinp" id="rz" type="number" step="1" value="0" oninput="apP('rz')"></div>
+
+    <div class="plbl">Scale</div>
+    <div class="prow"><span class="pax" style="color:#ff6666">X</span><input class="pinp" id="sx" type="number" step="0.1" value="1" oninput="apP('sx')"></div>
+    <div class="prow"><span class="pax" style="color:#66ee66">Y</span><input class="pinp" id="sy" type="number" step="0.1" value="1" oninput="apP('sy')"></div>
+    <div class="prow"><span class="pax" style="color:#6699ff">Z</span><input class="pinp" id="sz" type="number" step="0.1" value="1" oninput="apP('sz')"></div>
+
+    <div class="plbl">Name</div>
+    <input class="pinp" id="oname" placeholder="Object name…" style="margin-bottom:8px" oninput="apP('name')">
+
+    <div class="plbl">Attachments</div>
+    <div id="att-list" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:2">No attachments.</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  NightFury 3D Designer  —  Full Blender-style viewport
+//  Uses THREE.OrbitControls + THREE.TransformControls
+// ═══════════════════════════════════════════════════════
+
+var portInner = document.getElementById('dport-inner');
+var canvas    = document.getElementById('dc');
+
+// ── Renderer ──
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x060f1a);
+
+// ── Scene ──
+var scene  = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(45,1,0.01,1000);
+camera.position.set(6,5,10);
+
+// ── Lights ──
+scene.add(new THREE.AmbientLight(0x334466, 0.8));
+var keyL = new THREE.DirectionalLight(0xfff0e8, 1.2);
+keyL.position.set(8,14,8); keyL.castShadow = true;
+keyL.shadow.mapSize.width = keyL.shadow.mapSize.height = 2048;
+scene.add(keyL);
+var fillL = new THREE.DirectionalLight(0x4488cc, 0.4);
+fillL.position.set(-8,-4,-8); scene.add(fillL);
+
+// ── Floor ──
+var floorMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(30,30),
+  new THREE.MeshStandardMaterial({color:0x080d15,roughness:1})
+);
+floorMesh.rotation.x = -Math.PI/2;
+floorMesh.receiveShadow = true;
+scene.add(floorMesh);
+
+// ── Grid ──
+var gridHelper = new THREE.GridHelper(20,40, 0x1a3050, 0x0d1e30);
+scene.add(gridHelper);
+
+// ── OrbitControls ──
+var orbit = new THREE.OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true;
+orbit.dampingFactor = 0.08;
+orbit.screenSpacePanning = true;
+orbit.minDistance = 0.5;
+orbit.maxDistance = 100;
+// Right mouse = pan, Left = orbit, Middle = zoom
+orbit.mouseButtons = {
+  LEFT:  THREE.MOUSE.ROTATE,
+  MIDDLE:THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.PAN
+};
+
+// ── TransformControls ──
+var transform = new THREE.TransformControls(camera, renderer.domElement);
+transform.setMode('translate');
+transform.setSpace('local');
+scene.add(transform);
+
+// Disable orbit when dragging transform gizmo
+transform.addEventListener('dragging-changed', function(e){
+  orbit.enabled = !e.value;
+});
+
+// When transform moves object, snap if needed
+transform.addEventListener('objectChange', function(){
+  if(selected){
+    if(gridSnapOn) snapToGrid(selected);
+    if(snapOn)     checkObjectSnap(selected);
+    syncProps();
+    // Move attached children
+    moveAttached(selected);
+  }
+});
+
+// ── Resize ──
+function resize(){
+  var w=portInner.clientWidth, h=portInner.clientHeight;
+  if(!w||!h) return;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(portInner);
+setTimeout(resize,50);
+
+// ── State ──
+var objects    = [];
+var selected   = null;
+var idC        = 0;
+var activeColor= '#00d4b8';
+var activeMat  = 'standard';
+var shadMode   = 'solid';
+var snapOn     = false;
+var gridSnapOn = false;
+var SNAP_DIST  = 0.4;
+var GRID_SNAP  = 0.5;
+// attachment map: key=id, value=[id, id, ...]
+var attachments = {};
+
+// ── Colours ──
+var COLORS = [
+  '#e8f4fc','#00d4b8','#ff6b2b','#7c3aed','#f59e0b',
+  '#10b981','#ef4444','#38bdf8','#a78bfa','#fb923c',
+  '#34d399','#f472b6','#60a5fa','#facc15','#94a3b8'
+];
+var cstrip = document.getElementById('cstrip');
+COLORS.forEach(function(c){
+  var sw=document.createElement('div');
+  sw.className='csw'+(c===activeColor?' act':'');
+  sw.style.background=c;
+  sw.title=c;
+  sw.onclick=function(){
+    activeColor=c;
+    document.querySelectorAll('.csw').forEach(function(s){s.classList.remove('act');});
+    sw.classList.add('act');
+    if(selected){
+      selected.material=mkMat(c,activeMat);
+      selected.userData.color=c;
+      reApplyHighlight();
+      updateList();
+    }
+  };
+  cstrip.appendChild(sw);
+});
+
+// ── Materials ──
+var MTYPES = [
+  {id:'standard', l:'Plastic Matte',  r:0.75, m:0.05},
+  {id:'shiny',    l:'Plastic Shiny',  r:0.05, m:0.0},
+  {id:'metal',    l:'Metal',          r:0.2,  m:0.9},
+  {id:'rubber',   l:'Rubber',         r:0.95, m:0.0},
+  {id:'glass',    l:'Glass',          r:0.0,  m:0.0, tr:true, op:0.32},
+  {id:'emissive', l:'Glowing',        r:0.6,  m:0.0, em:true},
+];
+var mb=document.getElementById('matbtns');
+MTYPES.forEach(function(mt){
+  var btn=document.createElement('button');
+  btn.className='matbtn'+(mt.id===activeMat?' on':'');
+  btn.textContent=mt.l;
+  btn.onclick=function(){
+    activeMat=mt.id;
+    document.querySelectorAll('.matbtn').forEach(function(b){b.classList.remove('on');});
+    btn.classList.add('on');
+    if(selected){
+      selected.userData.matType=mt.id;
+      selected.material=mkMat(selected.userData.color,mt.id);
+      reApplyHighlight();
+    }
+  };
+  mb.appendChild(btn);
+});
+
+function mkMat(hex,tid){
+  var t=MTYPES.find(function(x){return x.id===tid;})||MTYPES[0];
+  var opts={color:new THREE.Color(hex),roughness:t.r,metalness:t.m};
+  if(t.tr){opts.transparent=true;opts.opacity=t.op;}
+  if(t.em){opts.emissive=new THREE.Color(hex);opts.emissiveIntensity=0.6;}
+  return new THREE.MeshStandardMaterial(opts);
+}
+
+// ── Bounding box helper ──
+var bbHelper = null;
+function showBB(obj){
+  if(bbHelper){ scene.remove(bbHelper); bbHelper=null; }
+  if(!obj) return;
+  bbHelper = new THREE.BoxHelper(obj, 0x00d4b8);
+  scene.add(bbHelper);
+}
+
+// ── Select object ──
+function selectObj(obj){
+  // Deselect old
+  if(selected){
+    var ot=MTYPES.find(function(x){return x.id===selected.userData.matType;})||MTYPES[0];
+    if(!ot.em){
+      selected.material.emissiveIntensity=0;
+      selected.material.emissive=new THREE.Color(0x000000);
+    }
+    transform.detach();
+    showBB(null);
+  }
+  selected=obj;
+  if(!obj){
+    clearProps();
+    document.getElementById('s-sel').textContent='—';
+    updateAttList();
+    return;
+  }
+  reApplyHighlight();
+  transform.attach(obj);
+  showBB(obj);
+  syncProps();
+  document.getElementById('s-sel').textContent=obj.userData.name;
+  updateAttList();
+  updateList();
+}
+
+function reApplyHighlight(){
+  if(!selected) return;
+  var ot=MTYPES.find(function(x){return x.id===selected.userData.matType;})||MTYPES[0];
+  if(!ot.em){
+    selected.material.emissive=new THREE.Color(0x00d4b8);
+    selected.material.emissiveIntensity=0.18;
+  }
+}
+
+// ── Add shape ──
+window.addShape = function(type){
+  var GEO={
+    box:      function(){return new THREE.BoxGeometry(1,1,1);},
+    sphere:   function(){return new THREE.SphereGeometry(0.6,32,20);},
+    cylinder: function(){return new THREE.CylinderGeometry(0.5,0.5,1.2,32);},
+    cone:     function(){return new THREE.ConeGeometry(0.6,1.4,24);},
+    torus:    function(){return new THREE.TorusGeometry(0.6,0.22,20,60);},
+    plane:    function(){return new THREE.PlaneGeometry(1.5,1.5,2,2);}
+  };
+  var geo=(GEO[type]||GEO.box)();
+  var mesh=new THREE.Mesh(geo, mkMat(activeColor,activeMat));
+  mesh.castShadow=mesh.receiveShadow=true;
+  mesh.position.set((Math.random()-.5)*3, 0.6, (Math.random()-.5)*3);
+  mesh.userData={id:++idC, name:type+'_'+idC, color:activeColor, matType:activeMat};
+  attachments[idC]=[];
+  scene.add(mesh);
+  objects.push(mesh);
+  selectObj(mesh);
+  updateList(); updateStats();
+};
+
+// ── Props sync ──
+function syncProps(){
+  if(!selected)return;
+  var o=selected;
+  document.getElementById('px').value=+o.position.x.toFixed(3);
+  document.getElementById('py').value=+o.position.y.toFixed(3);
+  document.getElementById('pz').value=+o.position.z.toFixed(3);
+  document.getElementById('rx').value=+(o.rotation.x*180/Math.PI).toFixed(2);
+  document.getElementById('ry').value=+(o.rotation.y*180/Math.PI).toFixed(2);
+  document.getElementById('rz').value=+(o.rotation.z*180/Math.PI).toFixed(2);
+  document.getElementById('sx').value=+o.scale.x.toFixed(3);
+  document.getElementById('sy').value=+o.scale.y.toFixed(3);
+  document.getElementById('sz').value=+o.scale.z.toFixed(3);
+  document.getElementById('oname').value=o.userData.name;
+}
+function clearProps(){
+  ['px','py','pz','rx','ry','rz'].forEach(function(i){document.getElementById(i).value='0';});
+  ['sx','sy','sz'].forEach(function(i){document.getElementById(i).value='1';});
+  document.getElementById('oname').value='';
+}
+
+window.apP=function(prop){
+  if(!selected) return;
+  var v=parseFloat(document.getElementById(prop).value);
+  if(isNaN(v)) return;
+  if(prop==='px')selected.position.x=v;
+  else if(prop==='py')selected.position.y=v;
+  else if(prop==='pz')selected.position.z=v;
+  else if(prop==='rx')selected.rotation.x=v*Math.PI/180;
+  else if(prop==='ry')selected.rotation.y=v*Math.PI/180;
+  else if(prop==='rz')selected.rotation.z=v*Math.PI/180;
+  else if(prop==='sx')selected.scale.x=Math.max(0.01,v);
+  else if(prop==='sy')selected.scale.y=Math.max(0.01,v);
+  else if(prop==='sz')selected.scale.z=Math.max(0.01,v);
+  else if(prop==='name'){selected.userData.name=document.getElementById('oname').value;updateList();}
+  if(bbHelper) bbHelper.update();
+  moveAttached(selected);
+};
+
+// ── Object list UI ──
+function updateList(){
+  document.getElementById('ocnt').textContent=objects.length+' OBJECTS';
+  var ol=document.getElementById('olist');
+  if(!objects.length){ol.innerHTML='<div class="oempty">No objects yet.<br>Add a shape ←</div>';return;}
+  ol.innerHTML=objects.map(function(o){
+    var hasAtt=(attachments[o.userData.id]&&attachments[o.userData.id].length>0);
+    return '<div class="oitem'+(o===selected?' act':'')+(hasAtt?' attached':'')+'" onclick="selById('+o.userData.id+')">'
+      +'<div class="odot" style="background:'+o.userData.color+'"></div>'
+      +'<span class="oname">'+o.userData.name+'</span>'
+      +(hasAtt?'<span class="oico">🔗</span>':'')
+      +'<button class="odel" onclick="event.stopPropagation();delById('+o.userData.id+')">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+function updateStats(){
+  document.getElementById('s-objs').textContent=objects.length;
+  var v=0,f=0;
+  objects.forEach(function(o){
+    if(o.geometry&&o.geometry.attributes.position) v+=o.geometry.attributes.position.count;
+    if(o.geometry&&o.geometry.index) f+=o.geometry.index.count/3;
+  });
+  document.getElementById('s-verts').textContent=v;
+  document.getElementById('s-faces').textContent=Math.round(f);
+}
+
+window.selById=function(id){
+  var o=objects.find(function(x){return x.userData.id===id;});
+  if(o) selectObj(o);
+};
+window.delById=function(id){
+  var i=objects.findIndex(function(x){return x.userData.id===id;});
+  if(i<0) return;
+  scene.remove(objects[i]);
+  if(selected===objects[i]) selectObj(null);
+  // Remove from attachments
+  delete attachments[id];
+  Object.keys(attachments).forEach(function(k){
+    attachments[k]=attachments[k].filter(function(x){return x!==id;});
+  });
+  objects.splice(i,1);
+  updateList(); updateStats();
+};
+
+// ── Snapping ──
+window.toggleSnap=function(){
+  snapOn=!snapOn;
+  document.getElementById('snap-toggle').classList.toggle('on',snapOn);
+};
+window.toggleGridSnap=function(){
+  gridSnapOn=!gridSnapOn;
+  document.getElementById('snap-grid').classList.toggle('on',gridSnapOn);
+  transform.setTranslationSnap(gridSnapOn?GRID_SNAP:null);
+  transform.setRotationSnap(gridSnapOn?Math.PI/12:null);
+};
+
+function snapToGrid(obj){
+  obj.position.x = Math.round(obj.position.x/GRID_SNAP)*GRID_SNAP;
+  obj.position.y = Math.round(obj.position.y/GRID_SNAP)*GRID_SNAP;
+  obj.position.z = Math.round(obj.position.z/GRID_SNAP)*GRID_SNAP;
+}
+
+var snapping=false;
+function checkObjectSnap(obj){
+  if(!obj||!snapOn) return;
+  var boxA=new THREE.Box3().setFromObject(obj);
+  var cA  =boxA.getCenter(new THREE.Vector3());
+  var sA  =boxA.getSize(new THREE.Vector3());
+  var closest=null, closestDist=Infinity, closestFace=null;
+
+  objects.forEach(function(other){
+    if(other===obj) return;
+    var boxB=new THREE.Box3().setFromObject(other);
+    var cB  =boxB.getCenter(new THREE.Vector3());
+    var sB  =boxB.getSize(new THREE.Vector3());
+
+    // Check 6 face snap points (face-to-face)
+    var facePairs = [
+      // [A face center offset, B face center offset, axis label]
+      [new THREE.Vector3( sA.x/2,0,0), new THREE.Vector3(-sB.x/2,0,0),'X+'],
+      [new THREE.Vector3(-sA.x/2,0,0), new THREE.Vector3( sB.x/2,0,0),'X-'],
+      [new THREE.Vector3(0, sA.y/2,0), new THREE.Vector3(0,-sB.y/2,0),'Y+'],
+      [new THREE.Vector3(0,-sA.y/2,0), new THREE.Vector3(0, sB.y/2,0),'Y-'],
+      [new THREE.Vector3(0,0, sA.z/2), new THREE.Vector3(0,0,-sB.z/2),'Z+'],
+      [new THREE.Vector3(0,0,-sA.z/2), new THREE.Vector3(0,0, sB.z/2),'Z-'],
+    ];
+    facePairs.forEach(function(fp){
+      var faceA=cA.clone().add(fp[0]);
+      var faceB=cB.clone().add(fp[1]);
+      var dist=faceA.distanceTo(faceB);
+      if(dist<closestDist){
+        closestDist=dist;
+        closest=other;
+        closestFace={fA:fp[0],fB:fp[1],cA:cA.clone(),cB:cB.clone(),axis:fp[2]};
+      }
+    });
+  });
+
+  var sp=document.getElementById('snap-preview');
+  if(closest && closestDist<SNAP_DIST){
+    // Snap: move A so its face aligns with B's face
+    var delta=closestFace.cB.clone().add(closestFace.fB)
+              .sub(closestFace.cA.clone().add(closestFace.fA));
+    obj.position.add(delta);
+    sp.textContent='◆ SNAPPED TO '+closest.userData.name+' ['+closestFace.axis+']';
+    sp.classList.add('show');
+    snapping=true;
+    setTimeout(function(){sp.classList.remove('show'); snapping=false;},1500);
+  }
+}
+
+// ── Attachment system ──
+// Records which objects are "attached" - when parent moves, children follow
+var attachOffsets={}; // key: "parentId_childId" => offset Vector3
+
+window.attachSelected=function(){
+  if(!selected||objects.length<2) return;
+  var pid=selected.userData.id;
+  // Find closest other object
+  var posA=new THREE.Vector3();
+  selected.getWorldPosition(posA);
+  var closest=null, cdist=Infinity;
+  objects.forEach(function(o){
+    if(o===selected) return;
+    var p=new THREE.Vector3();
+    o.getWorldPosition(p);
+    var d=p.distanceTo(posA);
+    if(d<cdist){cdist=d;closest=o;}
+  });
+  if(!closest) return;
+  var cid=closest.userData.id;
+  if(attachments[pid].indexOf(cid)===-1){
+    attachments[pid].push(cid);
+    // Store offset
+    var key=pid+'_'+cid;
+    var off=new THREE.Vector3().subVectors(closest.position, selected.position);
+    attachOffsets[key]=off;
+    document.getElementById('db-att').classList.add('on-ora');
+    setTimeout(function(){document.getElementById('db-att').classList.remove('on-ora');},500);
+  }
+  updateList(); updateAttList();
+};
+
+window.detachSelected=function(){
+  if(!selected) return;
+  var pid=selected.userData.id;
+  attachments[pid]=[];
+  updateList(); updateAttList();
+};
+
+function moveAttached(obj){
+  if(!obj) return;
+  var pid=obj.userData.id;
+  if(!attachments[pid]||!attachments[pid].length) return;
+  attachments[pid].forEach(function(cid){
+    var child=objects.find(function(x){return x.userData.id===cid;});
+    if(!child) return;
+    var key=pid+'_'+cid;
+    var off=attachOffsets[key];
+    if(off) child.position.copy(obj.position).add(off);
+  });
+}
+
+function updateAttList(){
+  var el=document.getElementById('att-list');
+  if(!selected){el.textContent='Select an object.'; return;}
+  var pid=selected.userData.id;
+  var atts=attachments[pid]||[];
+  if(!atts.length){el.textContent='No attachments.'; return;}
+  el.innerHTML=atts.map(function(cid){
+    var c=objects.find(function(x){return x.userData.id===cid;});
+    return c?'<span class="att-badge">🔗 '+c.userData.name+'</span>&nbsp;':'';
+  }).join('');
+}
+
+// ── Raycaster ──
+var ray=new THREE.Raycaster();
+var mv=new THREE.Vector2();
+var mDownT=0;
+canvas.addEventListener('mousedown',function(){mDownT=Date.now();});
+canvas.addEventListener('mouseup',function(e){
+  if(Date.now()-mDownT>250) return; // was a drag, not click
+  if(transform.dragging) return;
+  var rc=canvas.getBoundingClientRect();
+  mv.x=((e.clientX-rc.left)/rc.width)*2-1;
+  mv.y=-((e.clientY-rc.top)/rc.height)*2+1;
+  ray.setFromCamera(mv,camera);
+  var hits=ray.intersectObjects(objects);
+  if(hits.length){
+    selectObj(hits[0].object);
+  } else {
+    selectObj(null);
+  }
+});
+
+// ── Keyboard shortcuts ──
+window.addEventListener('keydown',function(e){
+  var tag=document.activeElement.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA') return;
+
+  if(e.key==='g'||e.key==='G') setMode('translate');
+  if(e.key==='r'||e.key==='R') setMode('rotate');
+  if(e.key==='s'||e.key==='S') setMode('scale');
+  if(e.key==='Delete'||e.key==='Backspace') delSel();
+  if((e.key==='d'||e.key==='D')&&e.shiftKey) dupSel();
+  if(e.key==='Escape'){ selectObj(null); }
+  if(e.key==='a'||e.key==='A') attachSelected();
+
+  // Nudge with arrows
+  if(selected){
+    var step=e.shiftKey?0.5:0.1;
+    if(e.key==='ArrowLeft') { selected.position.x-=step; syncProps(); moveAttached(selected); }
+    if(e.key==='ArrowRight'){ selected.position.x+=step; syncProps(); moveAttached(selected); }
+    if(e.key==='ArrowUp')   { selected.position.z-=step; syncProps(); moveAttached(selected); }
+    if(e.key==='ArrowDown') { selected.position.z+=step; syncProps(); moveAttached(selected); }
+    if(e.key==='PageUp')    { selected.position.y+=step; syncProps(); moveAttached(selected); }
+    if(e.key==='PageDown')  { selected.position.y-=step; syncProps(); moveAttached(selected); }
+    if(bbHelper) bbHelper.update();
+  }
+});
+
+// ── Transform mode ──
+window.setMode=function(m){
+  transform.setMode(m);
+  ['move','rotate','scale'].forEach(function(id){
+    document.getElementById('btn-'+id).classList.remove('on');
+  });
+  var map={translate:'move',rotate:'rotate',scale:'scale'};
+  if(map[m]) document.getElementById('btn-'+map[m]).classList.add('on');
+  document.getElementById('s-mode').textContent=m.toUpperCase();
+};
+
+// ── Shading ──
+window.setSh=function(m){
+  shadMode=m;
+  ['solid','wire','xray'].forEach(function(s){
+    document.getElementById('db-'+s).classList.toggle('on',s===m);
+  });
+  objects.forEach(applyShading);
+};
+
+function applyShading(o){
+  if(!o||!o.material) return;
+  o.material.wireframe  = (shadMode==='wire');
+  o.material.transparent= (shadMode==='xray')||o.userData.matType==='glass';
+  if(shadMode==='xray') o.material.opacity=0.3;
+  else if(o.userData.matType==='glass') o.material.opacity=0.32;
+  else o.material.opacity=1.0;
+}
+
+// ── Other controls ──
+window.tGrid=function(){ gridHelper.visible=!gridHelper.visible; document.getElementById('db-grid').classList.toggle('on',!gridHelper.visible); };
+window.tLocal=function(){
+  var l=transform.space==='local';
+  transform.setSpace(l?'world':'local');
+  document.getElementById('db-local').classList.toggle('on',!l);
+};
+window.rView=function(){ orbit.reset(); };
+window.frameAll=function(){
+  if(!objects.length) return;
+  var box=new THREE.Box3();
+  objects.forEach(function(o){box.expandByObject(o);});
+  var center=box.getCenter(new THREE.Vector3());
+  var size=box.getSize(new THREE.Vector3()).length();
+  orbit.target.copy(center);
+  camera.position.set(center.x+size,center.y+size*0.8,center.z+size*1.2);
+  orbit.update();
+};
+window.delSel=function(){ if(selected) delById(selected.userData.id); };
+window.dupSel=function(){
+  if(!selected) return;
+  var o=selected;
+  var geo=o.geometry.clone();
+  var mat=o.material.clone();
+  var mesh=new THREE.Mesh(geo,mat);
+  mesh.castShadow=mesh.receiveShadow=true;
+  mesh.position.copy(o.position).add(new THREE.Vector3(0.5,0,0.5));
+  mesh.rotation.copy(o.rotation);
+  mesh.scale.copy(o.scale);
+  mesh.userData={id:++idC,name:o.userData.name+'_copy',color:o.userData.color,matType:o.userData.matType};
+  attachments[idC]=[];
+  scene.add(mesh); objects.push(mesh);
+  selectObj(mesh);
+  updateList(); updateStats();
+};
+
+// ── Save / Load ──
+window.saveD=function(){
+  var data=objects.map(function(o){return{
+    type:o.geometry.type,name:o.userData.name,
+    color:o.userData.color,matType:o.userData.matType,
+    pos:o.position.toArray(),rot:[o.rotation.x,o.rotation.y,o.rotation.z],scl:o.scale.toArray()
+  };});
+  localStorage.setItem('nfl-design',JSON.stringify(data));
+  var b=event.target, ot=b.textContent; b.textContent='✓ SAVED!';
+  setTimeout(function(){b.textContent=ot;},1500);
+};
+window.loadD=function(){
+  var raw=localStorage.getItem('nfl-design');
+  if(!raw){alert('No saved design found.');return;}
+  clearD();
+  var GF={
+    BoxGeometry:      function(){return new THREE.BoxGeometry(1,1,1);},
+    SphereGeometry:   function(){return new THREE.SphereGeometry(0.6,32,20);},
+    CylinderGeometry: function(){return new THREE.CylinderGeometry(0.5,0.5,1.2,32);},
+    ConeGeometry:     function(){return new THREE.ConeGeometry(0.6,1.4,24);},
+    TorusGeometry:    function(){return new THREE.TorusGeometry(0.6,0.22,20,60);},
+    PlaneGeometry:    function(){return new THREE.PlaneGeometry(1.5,1.5,2,2);}
+  };
+  JSON.parse(raw).forEach(function(d){
+    var mesh=new THREE.Mesh((GF[d.type]||GF.BoxGeometry)(), mkMat(d.color,d.matType));
+    mesh.castShadow=mesh.receiveShadow=true;
+    mesh.position.fromArray(d.pos);
+    mesh.rotation.set(d.rot[0],d.rot[1],d.rot[2]);
+    mesh.scale.fromArray(d.scl);
+    mesh.userData={id:++idC,name:d.name,color:d.color,matType:d.matType};
+    attachments[idC]=[];
+    scene.add(mesh); objects.push(mesh);
+  });
+  updateList(); updateStats();
+};
+window.clearD=function(){
+  objects.forEach(function(o){scene.remove(o);});
+  objects.length=0; attachments={};
+  selectObj(null); updateList(); updateStats();
+};
+
+/* ── Axis Gizmo ── */
+var gc=document.getElementById('dgc');
+var gctx=gc.getContext('2d');
+function drawGizmo(){
+  gctx.clearRect(0,0,80,80);
+  var cx=40,cy=40;
+  gctx.beginPath();gctx.arc(cx,cy,37,0,Math.PI*2);
+  gctx.fillStyle='rgba(8,14,25,.8)';gctx.fill();
+  gctx.strokeStyle='rgba(0,212,184,.15)';gctx.lineWidth=1.5;gctx.stroke();
+
+  var m=camera.matrix.elements;
+  var axes=[
+    {l:'X',c:'#ff5555',hc:'#ff9999',dx: m[0],dy:-m[4],dz: m[8]},
+    {l:'Y',c:'#55ee55',hc:'#99ff99',dx: m[1],dy:-m[5],dz: m[9]},
+    {l:'Z',c:'#5588ff',hc:'#99bbff',dx: m[2],dy:-m[6],dz:m[10]}
+  ];
+  axes.sort(function(a,b){return a.dz-b.dz;});
+  axes.forEach(function(ax){
+    var ex=cx+ax.dx*30, ey=cy+ax.dy*30;
+    // Negative axis (faded)
+    gctx.beginPath();gctx.moveTo(cx-ax.dx*20,cy-ax.dy*20);gctx.lineTo(cx,cy);
+    gctx.strokeStyle=ax.c+'44';gctx.lineWidth=1.5;gctx.stroke();
+    // Positive axis
+    gctx.beginPath();gctx.moveTo(cx,cy);gctx.lineTo(ex,ey);
+    gctx.strokeStyle=ax.c;gctx.lineWidth=2.5;gctx.stroke();
+    // Dot
+    gctx.beginPath();gctx.arc(ex,ey,7,0,Math.PI*2);
+    gctx.fillStyle=ax.c+'66';gctx.fill();
+    gctx.strokeStyle=ax.c;gctx.lineWidth=2;gctx.stroke();
+    // Label
+    gctx.fillStyle=ax.hc;
+    gctx.font='bold 9px "JetBrains Mono",monospace';
+    gctx.textAlign='center';gctx.textBaseline='middle';
+    gctx.fillText(ax.l,ex,ey);
+  });
+  // Centre
+  gctx.beginPath();gctx.arc(cx,cy,4,0,Math.PI*2);
+  gctx.fillStyle='rgba(255,255,255,.45)';gctx.fill();
+}
+
+/* ── Render loop ── */
+function render(){
+  requestAnimationFrame(render);
+  orbit.update();
+  if(bbHelper&&selected) bbHelper.update();
+  renderer.render(scene,camera);
+  drawGizmo();
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NightFury Learn</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* ── HTTYD Hero ────────────────────────────────── */
+.hero {
+  position:relative;
+  height:calc(100vh - var(--nav-h));
+  overflow:hidden;
+  display:flex; align-items:center;
+}
+#hero-canvas {
+  position:absolute; inset:0;
+  width:100%; height:100%; display:block;
+}
+.hero-content {
+  position:relative; z-index:10;
+  max-width:640px; padding:0 64px;
+}
+.hero-tag {
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.22em;
+  color:var(--teal); text-transform:uppercase; margin-bottom:20px;
+  padding:6px 14px; border:1px solid rgba(0,212,184,.3);
+  border-radius:20px; background:rgba(0,212,184,.07);
+}
+.hero-tag::before { content:'◆'; font-size:7px; }
+.hero-title {
+  font-family:var(--font-display);
+  font-size:clamp(68px,9vw,130px);
+  line-height:.92; letter-spacing:.04em;
+  margin-bottom:6px;
+}
+.hero-title .t1 { color:var(--teal); display:block; }
+.hero-title .t2 { color:var(--orange); display:block; }
+.hero-title .t3 { color:var(--text); display:block; font-size:.55em; letter-spacing:.18em; }
+.hero-desc {
+  font-size:16px; color:var(--text2); line-height:1.8;
+  max-width:480px; margin:20px 0 36px;
+}
+.hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+.hero-hint {
+  position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
+  font-family:var(--font-mono); font-size:9px; color:rgba(0,212,184,.45);
+  letter-spacing:.15em; text-align:center;
+  animation:bob 2.2s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,100%{ transform:translateX(-50%) translateY(0); }
+  50%    { transform:translateX(-50%) translateY(-7px); }
+}
+
+/* ── Stats ── */
+.stats-row {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  background:var(--border); border:1px solid var(--border);
+  border-radius:var(--radius-lg); overflow:hidden; gap:1px;
+  margin:48px 0 56px;
+}
+.stat-cell { background:var(--panel); padding:26px 20px; text-align:center; }
+.stat-value { font-family:var(--font-display); font-size:48px; letter-spacing:.04em; line-height:1; }
+.sv-teal   { color:var(--teal); }
+.sv-orange { color:var(--orange); }
+.sv-purple { color:var(--purple); }
+.sv-gold   { color:var(--gold); }
+.stat-label { font-family:var(--font-mono); font-size:10px; color:var(--text3);
+               letter-spacing:.14em; text-transform:uppercase; margin-top:6px; }
+
+/* ── Course cards ── */
+.courses-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:56px; }
+.cc {
+  background:var(--panel); border:2px solid var(--border);
+  border-radius:var(--radius-lg); padding:28px; cursor:pointer;
+  transition:all .25s; position:relative; overflow:hidden;
+}
+.cc::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--cc-accent); transform:scaleX(0); transform-origin:left;
+  transition:transform .3s ease;
+}
+.cc:hover { transform:translateY(-3px); }
+.cc:hover::before { transform:scaleX(1); }
+.cc[data-c="teal"]  { --cc-accent:var(--teal);  }
+.cc[data-c="orange"]{ --cc-accent:var(--orange); }
+.cc[data-c="purple"]{ --cc-accent:var(--purple); }
+.cc[data-c="green"] { --cc-accent:var(--green);  }
+.cc[data-c="teal"]:hover  { border-color:rgba(0,212,184,.5);  box-shadow:0 8px 40px rgba(0,212,184,.12); }
+.cc[data-c="orange"]:hover{ border-color:rgba(255,107,43,.5); box-shadow:0 8px 40px rgba(255,107,43,.12); }
+.cc[data-c="purple"]:hover{ border-color:rgba(124,58,237,.5); box-shadow:0 8px 40px rgba(124,58,237,.12); }
+.cc[data-c="green"]:hover { border-color:rgba(16,185,129,.5); box-shadow:0 8px 40px rgba(16,185,129,.1); }
+.cc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.cc-icon { font-size:44px; line-height:1; }
+.cc-meta { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.cc-lv   { font-family:var(--font-mono); font-size:9px; color:var(--text3); letter-spacing:.1em; }
+.cc-title { font-family:var(--font-display); font-size:28px; letter-spacing:.04em; margin-bottom:8px; }
+.cc-desc  { font-size:13px; color:var(--text2); line-height:1.65; margin-bottom:18px; }
+.cc-foot  { display:flex; justify-content:space-between; align-items:center; }
+.cc-cnt   { font-family:var(--font-mono); font-size:10px; color:var(--text3); letter-spacing:.06em; }
+.cc-arr   {
+  width:32px; height:32px; border-radius:50%;
+  border:2px solid var(--border2); display:flex; align-items:center;
+  justify-content:center; color:var(--text2); transition:all .2s; font-size:14px;
+}
+.cc:hover .cc-arr { color:var(--teal); border-color:var(--teal); transform:translateX(4px); }
+
+/* ── Feature cards ── */
+.feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:56px; }
+.feat {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:28px 22px;
+  transition:all .22s;
+}
+.feat:hover { transform:translateY(-3px); border-color:var(--border2); }
+.feat-ico {
+  width:52px; height:52px; border-radius:12px;
+  background:var(--panel2); border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; margin-bottom:16px;
+}
+.feat h3 { font-family:var(--font-ui); font-weight:700; font-size:17px;
+           letter-spacing:.04em; margin-bottom:8px; color:var(--text); }
+.feat p  { font-size:13px; color:var(--text2); line-height:1.7; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">NIGHT<span>FURY</span></div>
+  <div class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="courses.html">Courses</a>
+    <a href="viewer.html">3D Library</a>
+    <a href="designer.html">3D Designer</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">SCHOOL EDITION</span>
+    <span id="clk" style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">--:--</span>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ══════════ HERO + NIGHT FURY ══════════ -->
+  <section class="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content">
+      <div class="hero-tag">NightFury Learn · Engineering Academy</div>
+      <h1 class="hero-title">
+        <span class="t1">NIGHT</span>
+        <span class="t2">FURY</span>
+        <span class="t3">LEARN</span>
+      </h1>
+      <p class="hero-desc">
+        Master Robotics, Electronics &amp; Engineering through video lessons,
+        interactive 3D models and a hands-on design studio — built for students.
+      </p>
+      <div class="hero-btns">
+        <a href="courses.html"  class="btn btn-teal">🚀 Start Learning</a>
+        <a href="viewer.html"   class="btn btn-outline">📦 3D Models</a>
+        <a href="designer.html" class="btn btn-ghost">🎨 Designer</a>
+      </div>
+    </div>
+    <div class="hero-hint">◆ CLICK THE DRAGON · DRAG TO ORBIT ◆</div>
+  </section>
+
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row"></div>
+
+    <!-- Courses -->
+    <div class="section-header">
+      <h2 class="section-title">COURSE<span>S</span></h2>
+      <span class="section-count" id="cc-cnt"></span>
+    </div>
+    <div class="courses-grid" id="courses-grid"></div>
+
+    <!-- Features -->
+    <div class="section-header">
+      <h2 class="section-title">WHAT'S <span>INSIDE</span></h2>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="feat-ico">🎬</div>
+        <h3>Video Lessons</h3>
+        <p>Curated YouTube videos for each topic, organised by course with key learning points highlighted.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-ico">📦</div>
+        <h3>3D Model Library</h3>
+        <p>Inspect robot parts in full 3D — servos, PCBs, gears, sensors. Rotate, zoom, go wireframe.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-ico">🎨</div>
+        <h3>3D Designer</h3>
+        <p>Build assemblies with real transform gizmos — move, rotate, scale, snap objects together like in Blender.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <span style="color:var(--teal)">NIGHTFURY LEARN</span>
+    <span>Robotics · Electronics · Engineering</span>
+    <span id="yr" style="font-family:var(--font-mono);font-size:10px;color:var(--text3)"></span>
+  </footer>
+</div>
+
+<script src="assets/data.js"></script>
+<script>
+/* ── Clock ── */
+document.getElementById('yr').textContent = new Date().getFullYear();
+setInterval(function(){
+  var d=new Date();
+  document.getElementById('clk').textContent=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+},1000);
+
+/* ── Stats ── */
+var STAT_COLS = ['sv-teal','sv-orange','sv-purple','sv-gold'];
+var sr = document.getElementById('stats-row');
+NF.STATS.forEach(function(s,i){
+  sr.innerHTML += '<div class="stat-cell"><div class="stat-value '+STAT_COLS[i]+'">'+s.value+'</div><div class="stat-label">'+s.label+'</div></div>';
+});
+
+/* ── Courses ── */
+var cg = document.getElementById('courses-grid');
+var CTAG = {amber:'tag-amber',cyan:'tag-cyan',purple:'tag-purple',green:'tag-green',teal:'tag-teal',orange:'tag-orange'};
+document.getElementById('cc-cnt').textContent = NF.COURSES.length+' courses';
+var CMAP = {amber:'teal',cyan:'teal',purple:'purple',green:'green'};
+NF.COURSES.forEach(function(c,i){
+  var col = ['teal','orange','purple','green'][i] || 'teal';
+  cg.innerHTML += '<div class="cc" data-c="'+col+'" onclick="location.href=\'courses.html?id='+c.id+'\'">'
+    +'<div class="cc-top"><span class="cc-icon">'+c.icon+'</span>'
+    +'<div class="cc-meta"><span class="tag '+CTAG[c.color]+'">'+c.tag+'</span>'
+    +'<span class="cc-lv">'+c.level+'</span></div></div>'
+    +'<div class="cc-title">'+c.title+'</div>'
+    +'<p class="cc-desc">'+c.description+'</p>'
+    +'<div class="cc-foot"><span class="cc-cnt">'+c.lessons.length+' LESSONS</span>'
+    +'<span class="cc-arr">→</span></div></div>';
+});
+
+/* ════════════════════════════════════════════════════
+   NIGHT FURY DRAGON — Three.js
+   Click = plasma blast | Drag = orbit camera
+   ════════════════════════════════════════════════════ */
+(function(){
+  var canvas  = document.getElementById('hero-canvas');
+  var section = canvas.parentElement;
+
+  var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene  = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a1828);
+  scene.fog = new THREE.FogExp2(0x0a1828, 0.01);
+
+  var camera = new THREE.PerspectiveCamera(50,1,0.1,500);
+  camera.position.set(-8, 4, 22);
+  camera.lookAt(0,0,0);
+
+  /* ── Lights ── */
+  scene.add(new THREE.AmbientLight(0x1a3a5a, 1.0));
+  var moonLight = new THREE.DirectionalLight(0x8ab4d4, 0.9);
+  moonLight.position.set(-10,20,5); moonLight.castShadow=true; scene.add(moonLight);
+  var plasmaLight = new THREE.PointLight(0x00ffd4, 1.5, 25);
+  plasmaLight.position.set(0,3,8); scene.add(plasmaLight);
+  var rimLight = new THREE.DirectionalLight(0x0060a0, 0.5);
+  rimLight.position.set(12,4,-8); scene.add(rimLight);
+
+  /* ── Starfield ── */
+  (function(){
+    var geo=new THREE.BufferGeometry();
+    var pos=new Float32Array(1000*3);
+    for(var i=0;i<1000;i++){
+      pos[i*3]  =(Math.random()-.5)*300;
+      pos[i*3+1]=(Math.random()-.5)*300;
+      pos[i*3+2]=(Math.random()-.5)*300;
+    }
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(geo,new THREE.PointsMaterial({color:0xffffff,size:0.3,transparent:true,opacity:0.7})));
+  })();
+
+  /* ── Aurora (animated planes) ── */
+  var auroras = [];
+  [0x004488, 0x006655, 0x220055].forEach(function(col,i){
+    var ag = new THREE.PlaneGeometry(40,8,1,1);
+    var am = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.07, side:THREE.DoubleSide});
+    var ap = new THREE.Mesh(ag,am);
+    ap.rotation.x = Math.PI/2 - 0.4;
+    ap.position.set(i*12-12, 18+i*3, -30);
+    scene.add(ap); auroras.push(ap);
+  });
+
+  /* ── Night Fury Materials ── */
+  var bodyMat = new THREE.MeshStandardMaterial({
+    color:0x0d141e, roughness:0.25, metalness:0.7,
+    emissive:0x0a1830, emissiveIntensity:0.2
+  });
+  var scaleMat = new THREE.MeshStandardMaterial({
+    color:0x0f1f30, roughness:0.15, metalness:0.85
+  });
+  var wingMat = new THREE.MeshStandardMaterial({
+    color:0x0a1020, roughness:0.7, metalness:0.05,
+    transparent:true, opacity:0.9, side:THREE.DoubleSide
+  });
+  var eyeMat = new THREE.MeshStandardMaterial({
+    color:0x00ffd4, emissive:0x00ffd4, emissiveIntensity:1.8, roughness:0
+  });
+  var pupilMat = new THREE.MeshStandardMaterial({ color:0x000000, roughness:1 });
+  var hornMat  = new THREE.MeshStandardMaterial({ color:0x0c1825, roughness:0.2, metalness:0.9 });
+  var finMat   = new THREE.MeshStandardMaterial({
+    color:0x061018, roughness:0.8, metalness:0.0,
+    transparent:true, opacity:0.85, side:THREE.DoubleSide
+  });
+
+  function M(geo,mat){ var m=new THREE.Mesh(geo,mat); m.castShadow=true; return m; }
+
+  /* ══════════════════════════════
+     BUILD NIGHT FURY
+     ══════════════════════════════ */
+  var dragon = new THREE.Group();
+  scene.add(dragon);
+
+  /* -- Body core (elongated capsule-like) -- */
+  var bodyCore = new THREE.Group(); dragon.add(bodyCore);
+
+  // Main torso
+  var torso = M(new THREE.SphereGeometry(1.4,16,12), bodyMat);
+  torso.scale.set(1,0.85,1.7); bodyCore.add(torso);
+
+  // Chest bulge
+  var chest = M(new THREE.SphereGeometry(1.1,12,10), scaleMat);
+  chest.scale.set(0.9,0.8,1.1); chest.position.set(0,-0.2,1.2); bodyCore.add(chest);
+
+  // Belly plates
+  for(var i=0;i<5;i++){
+    var bp = M(new THREE.SphereGeometry(0.35-i*0.03,8,6), scaleMat);
+    bp.scale.set(1.6,0.3,1); bp.position.set(0,-0.85,1.8-i*0.52); bodyCore.add(bp);
+  }
+
+  // Neck
+  var neck = M(new THREE.CylinderGeometry(0.55,0.85,1.8,12), bodyMat);
+  neck.rotation.x = -0.45; neck.position.set(0,0.4,2.9); bodyCore.add(neck);
+
+  // Tail (tapered segments)
+  var tailSegs = [];
+  for(var i=0;i<8;i++){
+    var tr = 0.7*(1-i/9);
+    var ts = M(new THREE.SphereGeometry(tr,10,8), bodyMat);
+    ts.scale.set(0.9,0.75,1.1);
+    tailSegs.push(ts); bodyCore.add(ts);
+  }
+
+  /* -- HEAD -- */
+  var head = new THREE.Group(); dragon.add(head);
+
+  var skull = M(new THREE.SphereGeometry(0.95,16,12), bodyMat);
+  skull.scale.set(1.1,0.85,1.35); head.add(skull);
+
+  // Snout (wider/flatter like Night Fury)
+  var snout = M(new THREE.CylinderGeometry(0.32,0.55,1.0,10), bodyMat);
+  snout.rotation.x = -Math.PI/2; snout.position.set(0,-0.08,1.18); head.add(snout);
+
+  // Snout tip
+  var tip = M(new THREE.SphereGeometry(0.32,10,8), bodyMat);
+  tip.scale.set(1.2,0.7,1); tip.position.set(0,-0.08,1.68); head.add(tip);
+
+  // Nostril glow
+  [-0.18,0.18].forEach(function(x){
+    var n = M(new THREE.SphereGeometry(0.08,8,6),
+      new THREE.MeshStandardMaterial({color:0x00ffd4,emissive:0x00ffd4,emissiveIntensity:0.8}));
+    n.position.set(x,0,1.6); head.add(n);
+  });
+
+  // EYES (iconic Night Fury cat eyes)
+  [-0.52,0.52].forEach(function(x){
+    var eye = M(new THREE.SphereGeometry(0.2,12,10), eyeMat);
+    eye.position.set(x,0.22,0.68); head.add(eye);
+    var pupil = M(new THREE.SphereGeometry(0.14,8,6), pupilMat);
+    pupil.scale.x = 0.22; // slit pupil
+    pupil.position.set(x,0.22,0.76); head.add(pupil);
+    // Eye reflection
+    var ref = M(new THREE.SphereGeometry(0.06,6,4),
+      new THREE.MeshBasicMaterial({color:0xffffff}));
+    ref.position.set(x+0.06,0.3,0.8); head.add(ref);
+  });
+
+  // Head fins / ears (Night Fury's distinctive head fins)
+  [-1,1].forEach(function(side){
+    for(var f=0;f<2;f++){
+      var fsh = new THREE.Shape();
+      fsh.moveTo(0,0);
+      fsh.bezierCurveTo(0.1,0.6, 0.05,1.2, 0,1.5);
+      fsh.bezierCurveTo(-0.15,1.0, -0.2,0.4, 0,0);
+      var fin = M(new THREE.ExtrudeGeometry(fsh,{depth:0.03,bevelEnabled:false}), finMat);
+      fin.rotation.y = side*(0.5+f*0.25);
+      fin.rotation.z = side*0.1;
+      fin.position.set(side*(0.7+f*0.15), 0.5, -0.2+f*0.3);
+      head.add(fin);
+    }
+  });
+
+  // Horns
+  [-0.45,0.45].forEach(function(x){
+    var h = M(new THREE.ConeGeometry(0.1,1.0,6), hornMat);
+    h.position.set(x,0.85,-0.1);
+    h.rotation.set(-0.3, x>0?0.3:-0.3, x>0?0.25:-0.25);
+    head.add(h);
+  });
+
+  /* -- TAIL FIN (Night Fury signature: one fin, not two) -- */
+  var tailFinGroup = new THREE.Group(); dragon.add(tailFinGroup);
+
+  function makeTailFin(side){
+    var tfs = new THREE.Shape();
+    tfs.moveTo(0,0);
+    tfs.bezierCurveTo(0.5*side,0.3, 1.2*side,0.8, 1.5*side,0.3);
+    tfs.bezierCurveTo(1.8*side,0, 1.4*side,-0.5, 0.8*side,-0.8);
+    tfs.bezierCurveTo(0.3*side,-0.5, 0,-0.2, 0,0);
+    var tfm = M(new THREE.ExtrudeGeometry(tfs,{depth:0.04,bevelEnabled:false}), finMat);
+    return tfm;
+  }
+  var tf1 = makeTailFin(1);  tailFinGroup.add(tf1);
+  var tf2 = makeTailFin(-1); tailFinGroup.add(tf2);
+
+  // Tail spine plates
+  for(var i=0;i<6;i++){
+    var sp = M(new THREE.ConeGeometry(0.08,0.4-i*0.04,5), hornMat);
+    sp.position.set(0, 0.3, 0);
+    tailFinGroup.add(sp);
+  }
+
+  /* -- WINGS -- */
+  var leftWingGrp  = new THREE.Group(); dragon.add(leftWingGrp);
+  var rightWingGrp = new THREE.Group(); dragon.add(rightWingGrp);
+
+  function makeWing(side){
+    var wg = new THREE.Group();
+    // Main membrane
+    var wShape = new THREE.Shape();
+    wShape.moveTo(0,0);
+    wShape.bezierCurveTo(1.5*side,0.6, 3.8*side,1.8, 5.2*side,0.5);
+    wShape.bezierCurveTo(6.0*side,-0.2, 5.8*side,-2.2, 4.2*side,-3.0);
+    wShape.bezierCurveTo(3.0*side,-3.5, 1.5*side,-2.2, 0.8*side,-1.2);
+    wShape.bezierCurveTo(0.3*side,-0.6, 0,-0.2, 0,0);
+    var wing = M(new THREE.ExtrudeGeometry(wShape,{depth:0.05,bevelEnabled:false}), wingMat);
+    wg.add(wing);
+
+    // Wing bone structure
+    var boneEnds = [[5.2*side,0.5],[5.8*side,-2.2],[4.2*side,-3.0]];
+    boneEnds.forEach(function(be){
+      var boneLen = Math.sqrt(be[0]*be[0]+be[1]*be[1]);
+      var bone = M(new THREE.CylinderGeometry(0.06,0.03,boneLen,8), hornMat);
+      bone.rotation.z = Math.atan2(be[0], -be[1]) - Math.PI/2;
+      bone.position.set(be[0]/2,be[1]/2,0.03);
+      wg.add(bone);
+    });
+
+    // Shoulder bone
+    var shoulderBone = M(new THREE.CylinderGeometry(0.12,0.08,1.8,8), bodyMat);
+    shoulderBone.rotation.z = side>0?-0.5:0.5;
+    shoulderBone.position.set(side*0.9,-0.2,0);
+    wg.add(shoulderBone);
+
+    return wg;
+  }
+  leftWingGrp.add(makeWing(-1));  leftWingGrp.position.set(-0.6,0.5,0);
+  rightWingGrp.add(makeWing(1));  rightWingGrp.position.set(0.6,0.5,0);
+
+  /* -- LEGS -- */
+  function makeLeg(side,front){
+    var lg = new THREE.Group();
+    var upper=M(new THREE.CylinderGeometry(0.18,0.13,1.0,8),bodyMat);
+    upper.position.y=-0.5; lg.add(upper);
+    var lower=M(new THREE.CylinderGeometry(0.13,0.08,0.9,8),bodyMat);
+    lower.position.y=-0.45; upper.add(lower);
+    // Foot
+    var foot=M(new THREE.BoxGeometry(0.25,0.12,0.5),bodyMat);
+    foot.position.set(0,-0.5,0.1); lower.add(foot);
+    // Claws
+    [-0.08,0,0.08].forEach(function(cx){
+      var claw=M(new THREE.ConeGeometry(0.04,0.25,5),hornMat);
+      claw.rotation.x=0.5; claw.position.set(cx,-0.06,0.3);
+      foot.add(claw);
+    });
+    lg.position.set(side*0.9,-0.8,front?1.2:-1.0);
+    lg.rotation.z=side*0.25;
+    return lg;
+  }
+  [-1,1].forEach(function(s){ dragon.add(makeLeg(s,true)); dragon.add(makeLeg(s,false)); });
+
+  /* ── Back spines ── */
+  for(var i=0;i<8;i++){
+    var sh=0.22+0.12*Math.sin((i/8)*Math.PI);
+    var sp=M(new THREE.ConeGeometry(0.055,sh,5),hornMat);
+    sp.position.set(0,1.1,-2.5+i*0.7);
+    bodyCore.add(sp);
+  }
+
+  /* ── PLASMA PARTICLES ── */
+  var PLASMA=60;
+  var plasmaGeo=new THREE.BufferGeometry();
+  var plasmaPos=new Float32Array(PLASMA*3);
+  var plasmaAges=new Float32Array(PLASMA);
+  var plasmaVels=[];
+  for(var i=0;i<PLASMA;i++){
+    plasmaAges[i]=0;
+    plasmaVels.push(new THREE.Vector3(
+      (Math.random()-.5)*0.5,
+      (Math.random()-.5)*0.4,
+      0.8+Math.random()*0.8
+    ));
+  }
+  plasmaGeo.setAttribute('position',new THREE.BufferAttribute(plasmaPos,3));
+  var plasmaMat=new THREE.PointsMaterial({
+    color:0x00ffd4,size:0.4,transparent:true,opacity:.8,
+    blending:THREE.AdditiveBlending,depthWrite:false
+  });
+  var plasmaParticles=new THREE.Points(plasmaGeo,plasmaMat);
+  plasmaParticles.visible=false;
+  scene.add(plasmaParticles);
+  var firing=false;
+
+  /* ── Mouse / drag ── */
+  var mouseX=0,mouseY=0;
+  var isDrag=false,dragSX=0,dragRY=0;
+  var mDownT=0;
+
+  canvas.addEventListener('mousedown',function(e){
+    isDrag=false; mDownT=Date.now();
+    dragSX=e.clientX; dragRY=dragon.rotation.y;
+    canvas.style.cursor='grabbing';
+  });
+  window.addEventListener('mouseup',function(){
+    canvas.style.cursor='grab';
+  });
+  canvas.addEventListener('mousemove',function(e){
+    mouseX=(e.clientX/window.innerWidth-.5)*2;
+    mouseY=(e.clientY/window.innerHeight-.5)*2;
+    if(e.buttons===1){
+      isDrag=true;
+      dragon.rotation.y = dragRY+(e.clientX-dragSX)*0.01;
+    }
+  });
+  canvas.addEventListener('click',function(){
+    if(Date.now()-mDownT<200 && !isDrag){ firing=true; setTimeout(function(){firing=false;},1400); }
+  });
+  canvas.style.cursor='grab';
+
+  /* ── Resize ── */
+  function resize(){
+    var w=section.clientWidth, h=section.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(section);
+  resize();
+
+  /* ════════════════════════════════════
+     ANIMATION LOOP
+     ════════════════════════════════════ */
+  var t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.016;
+
+    /* Dragon flight path */
+    var flyX=Math.sin(t*0.35)*9;
+    var flyY=Math.sin(t*0.55)*2.5+1.5;
+    var flyZ=Math.cos(t*0.35)*4;
+    dragon.position.set(flyX,flyY,flyZ);
+
+    /* Body banking / yaw */
+    var yaw=Math.atan2(
+      Math.cos(t*0.35)*0.35*9,
+      -Math.sin(t*0.35)*0.35*4
+    );
+    dragon.rotation.y = yaw + (isDrag? (dragon.rotation.y-yaw)*0 : 0);
+    dragon.rotation.z = Math.sin(t*0.35)*0.18;
+
+    /* Camera drift follows mouse */
+    camera.position.x += (mouseX*5-2 - camera.position.x)*0.025;
+    camera.position.y += (-mouseY*3+4 - camera.position.y)*0.025;
+    camera.lookAt(dragon.position.x*0.3, dragon.position.y*0.4, 0);
+
+    /* Tail segments undulate */
+    tailSegs.forEach(function(seg,i){
+      var pct=i/8;
+      seg.position.set(
+        Math.sin(t*0.8+i*0.45)*0.5,
+        Math.sin(t*1.1+i*0.5)*0.2,
+        -2.8-i*1.0
+      );
+    });
+
+    /* Tail fin */
+    tailFinGroup.position.copy(tailSegs[tailSegs.length-1].position);
+    tailFinGroup.rotation.y = dragon.rotation.y+Math.PI;
+    tailFinGroup.rotation.z = Math.sin(t*0.8)*0.2;
+
+    /* Head bobbing */
+    head.position.set(0, 0.5+Math.sin(t*0.6)*0.08, 4.2);
+    head.rotation.x = -0.12+Math.sin(t*0.5)*0.06;
+
+    /* Wing flapping */
+    var flap=0.6+Math.abs(Math.sin(t*2.2))*0.45;
+    leftWingGrp.rotation.z  =  flap+Math.sin(t*2.2)*0.25;
+    rightWingGrp.rotation.z = -flap-Math.sin(t*2.2)*0.25;
+    leftWingGrp.rotation.x  =  Math.sin(t*1.5)*0.08;
+    rightWingGrp.rotation.x = -Math.sin(t*1.5)*0.08;
+
+    /* Eye glow pulse */
+    var ep=1.5+Math.sin(t*3.5)*0.6;
+    eyeMat.emissiveIntensity=ep;
+
+    /* Plasma light flicker */
+    plasmaLight.position.copy(dragon.position);
+    plasmaLight.intensity = firing? (2+Math.random()*2) : (0.4+Math.sin(t*2)*0.2);
+    if(firing) plasmaLight.color.setHSL(0.47+Math.random()*0.06,1,0.6);
+    else       plasmaLight.color.set(0x00ffd4);
+
+    /* Plasma particles */
+    var headWorldPos=new THREE.Vector3();
+    head.getWorldPosition(headWorldPos);
+    var fwd=new THREE.Vector3(0,0,1)
+      .applyEuler(new THREE.Euler(head.rotation.x,dragon.rotation.y,dragon.rotation.z,'XYZ'));
+
+    for(var i=0;i<PLASMA;i++){
+      if(!firing){ plasmaAges[i]=0; continue; }
+      plasmaAges[i]+=0.028;
+      if(plasmaAges[i]>1) plasmaAges[i]=Math.random()*0.1;
+      var a=plasmaAges[i];
+      plasmaPos[i*3]  =headWorldPos.x+fwd.x*a*5+plasmaVels[i].x*a;
+      plasmaPos[i*3+1]=headWorldPos.y+fwd.y*a*5+plasmaVels[i].y*a;
+      plasmaPos[i*3+2]=headWorldPos.z+fwd.z*a*5+plasmaVels[i].z*a;
+    }
+    plasmaGeo.attributes.position.needsUpdate=true;
+    plasmaParticles.visible=firing;
+
+    /* Aurora drift */
+    auroras.forEach(function(a,i){ a.material.opacity=0.05+Math.sin(t*0.3+i)*0.04; });
+
+    renderer.render(scene,camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
