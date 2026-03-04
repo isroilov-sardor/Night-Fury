@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NightFury Learn · Courses</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+/* ── Layout ─────────────────────────────────────── */
+.courses-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+  min-height: calc(100vh - var(--nav-h));
+}
+
+/* ── Sidebar ────────────────────────────────────── */
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: .18em;
+  color: var(--text3); text-transform: uppercase;
+  padding: 0 8px; margin-bottom: 8px;
+}
+.course-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: none; border: 1px solid transparent;
+  border-radius: var(--radius); color: var(--text2);
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+  text-align: left; cursor: pointer;
+  transition: all .2s;
+}
+.course-btn:hover { background: var(--panel2); color: var(--text); }
+.course-btn.active {
+  background: rgba(255,179,0,.08);
+  border-color: rgba(255,179,0,.2);
+  color: var(--amber);
+}
+.course-btn .cb-icon { font-size: 18px; flex-shrink: 0; }
+.course-btn .cb-info { flex: 1; }
+.course-btn .cb-title { font-size: 12px; line-height: 1.3; }
+.course-btn .cb-count { font-family: var(--font-mono); font-size: 9px; color: var(--text3); margin-top: 2px; }
+
+.lesson-list { padding: 4px 0; }
+.lesson-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px 9px 36px;
+  background: none; border: none;
+  color: var(--text2); font-family: var(--font-ui);
+  font-size: 12px; text-align: left; cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all .2s;
+}
+.lesson-item:hover { color: var(--text); background: var(--panel2); }
+.lesson-item.active {
+  color: var(--cyan); background: rgba(0,212,255,.05);
+  border-left-color: var(--cyan);
+}
+.lesson-item.watched { color: var(--green); }
+.lesson-item .li-num {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text3); width: 16px; flex-shrink: 0;
+}
+.lesson-item .li-title { flex: 1; line-height: 1.3; }
+.lesson-item .li-dur {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text3); white-space: nowrap;
+}
+.lesson-item .li-check { color: var(--green); font-size: 10px; }
+
+/* ── Main content ────────────────────────────────── */
+.content-area {
+  padding: 32px 40px;
+}
+
+/* Video player */
+.video-wrap {
+  position: relative; width: 100%;
+  padding-bottom: 56.25%;
+  background: #000; border-radius: var(--radius-lg);
+  overflow: hidden; margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+.video-wrap iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; border: none;
+}
+.video-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px;
+  background: var(--panel);
+}
+.vp-icon { font-size: 52px; opacity: .25; }
+.vp-text { font-family: var(--font-mono); font-size: 11px;
+           color: var(--text3); letter-spacing: .1em; }
+
+/* Lesson info */
+.lesson-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 20px;
+  margin-bottom: 20px;
+}
+.lesson-title-row { flex: 1; }
+.lesson-num {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text3); letter-spacing: .12em;
+  margin-bottom: 6px;
+}
+.lesson-title {
+  font-family: var(--font-display);
+  font-size: 30px; letter-spacing: .04em;
+}
+.lesson-actions { display: flex; gap: 8px; padding-top: 6px; }
+
+.lesson-desc {
+  font-size: 14px; color: var(--text2);
+  line-height: 1.75; margin-bottom: 24px;
+  border-left: 2px solid var(--border2);
+  padding-left: 16px;
+}
+
+.topics-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.topic-pill {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text3); letter-spacing: .07em;
+  background: var(--panel); border: 1px solid var(--border);
+  padding: 4px 12px; border-radius: 20px;
+}
+
+/* Nav arrows */
+.lesson-nav {
+  display: flex; gap: 10px; align-items: center;
+  margin-top: 24px; padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.lnav-btn {
+  flex: 1; padding: 14px 20px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text2);
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.lnav-btn:hover { border-color: var(--border2); color: var(--text); }
+.lnav-btn.next { justify-content: flex-end; border-color: rgba(255,179,0,.2);
+                  color: var(--amber); }
+.lnav-btn.next:hover { background: rgba(255,179,0,.06); }
+.lnav-btn:disabled { opacity: .3; cursor: default; }
+
+/* Empty state */
+.pick-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 60vh; gap: 16px; text-align: center;
+}
+.pick-icon { font-size: 64px; opacity: .15; }
+.pick-title { font-family: var(--font-display); font-size: 28px; color: var(--text2); letter-spacing: .06em; }
+.pick-sub   { font-size: 13px; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">NIGHT<span>FURY</span></div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="courses.html" class="active">Courses</a>
+    <a href="viewer.html">3D Library</a>
+    <a href="designer.html">3D Designer</a>
+  </div>
+  <div class="nav-right">
+    <span id="progress-text" style="color:var(--green)"></span>
+    <span class="nav-badge">SCHOOL EDITION</span>
+  </div>
+</nav>
+
+<div class="page" style="padding-top:var(--nav-h)">
+  <div class="courses-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Courses</div>
+        <div id="course-nav"></div>
+      </div>
+    </aside>
+
+    <!-- ── Content ── -->
+    <main class="content-area" id="content-area">
+      <div class="pick-state">
+        <div class="pick-icon">🎬</div>
+        <div class="pick-title">SELECT A LESSON</div>
+        <p class="pick-sub">Choose a course and lesson from the sidebar to start watching.</p>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<script type="module">
+import { COURSES } from './assets/data.js';
+
+// ── State ────────────────────────────────────────────
+const params       = new URLSearchParams(location.search);
+let activeCourseId = params.get('id') || null;
+let activeLessonId = null;
+const watched      = new Set(JSON.parse(localStorage.getItem('nf-watched') || '[]'));
+
+// ── Build sidebar ────────────────────────────────────
+const courseNav = document.getElementById('course-nav');
+
+function buildSidebar() {
+  courseNav.innerHTML = '';
+  COURSES.forEach(course => {
+    const isOpen = course.id === activeCourseId;
+    const btn = document.createElement('button');
+    btn.className = `course-btn ${isOpen ? 'active' : ''}`;
+    btn.innerHTML = `
+      <span class="cb-icon">${course.icon}</span>
+      <div class="cb-info">
+        <div class="cb-title">${course.title}</div>
+        <div class="cb-count">${course.lessons.length} LESSONS</div>
+      </div>`;
+    btn.onclick = () => {
+      activeCourseId = course.id;
+      activeLessonId = null;
+      history.replaceState({}, '', `?id=${course.id}`);
+      buildSidebar();
+      showPick();
+    };
+    courseNav.appendChild(btn);
+
+    if (isOpen) {
+      const ul = document.createElement('div');
+      ul.className = 'lesson-list';
+      course.lessons.forEach((lesson, i) => {
+        const isW = watched.has(lesson.id);
+        const li  = document.createElement('button');
+        li.className = `lesson-item ${lesson.id === activeLessonId ? 'active' : ''} ${isW ? 'watched' : ''}`;
+        li.innerHTML = `
+          <span class="li-num">${String(i+1).padStart(2,'0')}</span>
+          <span class="li-title">${lesson.title}</span>
+          <span class="li-dur">${lesson.duration}</span>
+          ${isW ? '<span class="li-check">✓</span>' : ''}`;
+        li.onclick = () => loadLesson(course, lesson, i);
+        ul.appendChild(li);
+      });
+      courseNav.appendChild(ul);
+    }
+  });
+  updateProgress();
+}
+
+// ── Show pick state ──────────────────────────────────
+function showPick() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = `
+    <div class="pick-state">
+      <div class="pick-icon">🎬</div>
+      <div class="pick-title">SELECT A LESSON</div>
+      <p class="pick-sub">Choose a lesson from the sidebar to start watching.</p>
+    </div>`;
+}
+
+// ── Load lesson ──────────────────────────────────────
+function loadLesson(course, lesson, idx) {
+  activeLessonId = lesson.id;
+  buildSidebar();
+
+  const total  = course.lessons.length;
+  const isLast = idx === total - 1;
+  const isFirst = idx === 0;
+  const prevL  = course.lessons[idx - 1];
+  const nextL  = course.lessons[idx + 1];
+
+  const COLOR_TAG = {
+    amber: 'tag-amber', cyan: 'tag-cyan',
+    purple: 'tag-purple', green: 'tag-green'
+  };
+
+  const area = document.getElementById('content-area');
+  area.innerHTML = `
+    <div class="video-wrap" id="video-box">
+      ${lesson.videoId
+        ? `<iframe src="https://www.youtube.com/embed/${lesson.videoId}?rel=0&modestbranding=1"
+             allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope"></iframe>`
+        : `<div class="video-placeholder">
+             <div class="vp-icon">▶</div>
+             <div class="vp-text">VIDEO ID NOT SET IN data.js</div>
+           </div>`}
+    </div>
+
+    <div class="lesson-header">
+      <div class="lesson-title-row">
+        <div class="lesson-num">
+          <span class="tag ${COLOR_TAG[course.color]}">${course.tag}</span>
+          &nbsp;&nbsp;LESSON ${String(idx+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}
+        </div>
+        <div class="lesson-title">${lesson.title}</div>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-ghost btn-sm" id="mark-btn"
+          onclick="markWatched('${lesson.id}')">
+          ${watched.has(lesson.id) ? '✓ WATCHED' : 'MARK WATCHED'}
+        </button>
+      </div>
+    </div>
+
+    <p class="lesson-desc">${lesson.description}</p>
+
+    <div class="topics-row">
+      ${lesson.topics.map(t => `<span class="topic-pill">${t}</span>`).join('')}
+    </div>
+
+    <div class="lesson-nav">
+      <button class="lnav-btn prev" ${isFirst ? 'disabled' : ''}
+        onclick="goLesson('${course.id}', ${idx-1})">
+        ← ${prevL ? prevL.title : ''}
+      </button>
+      <button class="lnav-btn next" ${isLast ? 'disabled' : ''}
+        onclick="goLesson('${course.id}', ${idx+1})">
+        ${nextL ? nextL.title : ''} →
+      </button>
+    </div>`;
+}
+
+// ── Navigate lesson by index ─────────────────────────
+window.goLesson = (courseId, idx) => {
+  const course = COURSES.find(c => c.id === courseId);
+  if (!course || !course.lessons[idx]) return;
+  loadLesson(course, course.lessons[idx], idx);
+};
+
+// ── Mark watched ─────────────────────────────────────
+window.markWatched = (id) => {
+  watched.has(id) ? watched.delete(id) : watched.add(id);
+  localStorage.setItem('nf-watched', JSON.stringify([...watched]));
+  const btn = document.getElementById('mark-btn');
+  if (btn) btn.textContent = watched.has(id) ? '✓ WATCHED' : 'MARK WATCHED';
+  buildSidebar();
+};
+
+// ── Progress text ────────────────────────────────────
+function updateProgress() {
+  const total = COURSES.reduce((a, c) => a + c.lessons.length, 0);
+  const done  = watched.size;
+  document.getElementById('progress-text').textContent =
+    `${done} / ${total} DONE`;
+}
+
+// ── Init ─────────────────────────────────────────────
+buildSidebar();
+if (activeCourseId) {
+  // Auto-open first lesson if course specified in URL
+  const course = COURSES.find(c => c.id === activeCourseId);
+  if (course && course.lessons.length) loadLesson(course, course.lessons[0], 0);
+}
+</script>
+</body>
+</html>

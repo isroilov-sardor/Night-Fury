@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NightFury Learn · Home</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+/* ── Hero ─────────────────────────────────────────── */
+.hero {
+  min-height: calc(100vh - var(--nav-h));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+  padding: 60px 0;
+}
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: .2em;
+  color: var(--amber); text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.hero-eyebrow::before {
+  content: ''; display: block;
+  width: 32px; height: 1px;
+  background: var(--amber);
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 6vw, 88px);
+  line-height: 1;
+  letter-spacing: .05em;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.hero-title .hl { color: var(--amber); }
+.hero-title .hl2 { color: var(--cyan); }
+.hero-desc {
+  font-size: 16px; color: var(--text2);
+  line-height: 1.75; max-width: 460px;
+  margin-bottom: 36px;
+}
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Hero visual */
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.hero-visual svg { width: 100%; max-width: 420px; }
+
+/* Orbit rings */
+.orbit-ring {
+  animation: spin 18s linear infinite;
+  transform-origin: center;
+}
+.orbit-ring-2 { animation-duration: 28s; animation-direction: reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Floating labels */
+.float-label {
+  position: absolute;
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text3); letter-spacing: .08em;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 4px 10px; border-radius: 3px;
+}
+.fl-1 { top: 12%;  left: 2%;  }
+.fl-2 { top: 18%;  right: 4%; color: var(--cyan-dim); border-color: var(--cyan-dim); }
+.fl-3 { bottom: 22%; left: 4%; color: var(--amber-dim); border-color: var(--amber-dim); }
+.fl-4 { bottom: 18%; right: 2%; }
+
+/* ── Stats row ───────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 72px;
+}
+.stat-cell {
+  background: var(--panel);
+  padding: 28px 24px;
+  text-align: center;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 48px; letter-spacing: .05em;
+  color: var(--amber);
+  line-height: 1;
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* ── Course cards ─────────────────────────────────── */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 72px;
+}
+.course-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  cursor: pointer;
+  transition: all .25s;
+  position: relative; overflow: hidden;
+}
+.course-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top left,
+    var(--card-glow, rgba(255,179,0,.04)) 0%,
+    transparent 65%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.course-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.course-card:hover::after { opacity: 1; }
+.course-card[data-color="amber"]  { --card-glow: rgba(255,179,0,.08); }
+.course-card[data-color="cyan"]   { --card-glow: rgba(0,212,255,.08); }
+.course-card[data-color="purple"] { --card-glow: rgba(156,86,240,.08); }
+.course-card[data-color="green"]  { --card-glow: rgba(0,230,118,.08); }
+.course-card[data-color="amber"]:hover { border-color: rgba(255,179,0,.35); }
+.course-card[data-color="cyan"]:hover  { border-color: rgba(0,212,255,.3); }
+.course-card[data-color="purple"]:hover{ border-color: rgba(156,86,240,.3); }
+.course-card[data-color="green"]:hover { border-color: rgba(0,230,118,.3); }
+
+.cc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.cc-icon { font-size: 36px; line-height: 1; }
+.cc-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cc-level { font-family: var(--font-mono); font-size: 9px; color: var(--text3); letter-spacing: .1em; }
+.cc-title { font-family: var(--font-display); font-size: 26px; letter-spacing: .04em; margin-bottom: 8px; }
+.cc-desc  { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+.cc-footer { display: flex; align-items: center; justify-content: space-between; }
+.cc-count { font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: .06em; }
+.cc-arrow {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border2); border-radius: 50%;
+  font-size: 14px; color: var(--text2);
+  transition: all .2s;
+}
+.course-card:hover .cc-arrow { color: var(--amber); border-color: var(--amber); }
+
+/* ── Feature highlights ───────────────────────────── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 72px;
+}
+.feat-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+}
+.feat-icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  background: var(--panel2); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 16px;
+}
+.feat-title {
+  font-family: var(--font-ui); font-weight: 700;
+  font-size: 16px; letter-spacing: .05em;
+  margin-bottom: 8px;
+}
+.feat-desc { font-size: 13px; color: var(--text2); line-height: 1.65; }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav">
+  <div class="nav-logo">NIGHT<span>FURY</span></div>
+  <div class="nav-links">
+    <a href="index.html"    class="active">Home</a>
+    <a href="courses.html"  >Courses</a>
+    <a href="viewer.html"   >3D Library</a>
+    <a href="designer.html" >3D Designer</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">SCHOOL EDITION</span>
+    <span id="nav-clock">--:--</span>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow">NightFury Learn · v1.0</div>
+        <h1 class="hero-title">
+          LEARN<br>
+          <span class="hl">ROBOT</span><br>
+          <span class="hl2">ICS</span>
+        </h1>
+        <p class="hero-desc">
+          Video lessons, 3D model library, and an interactive designer —
+          everything a school student needs to go from zero to building
+          real robots and electronic systems.
+        </p>
+        <div class="hero-btns">
+          <a href="courses.html"  class="btn btn-amber">Start Learning</a>
+          <a href="viewer.html"   class="btn btn-outline">Explore 3D Models</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <!-- Animated hexapod SVG illustration -->
+        <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bodyGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stop-color="rgba(255,179,0,.25)"/>
+              <stop offset="100%" stop-color="rgba(255,179,0,.03)"/>
+            </radialGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Orbit rings -->
+          <g class="orbit-ring" style="transform-origin:210px 210px">
+            <circle cx="210" cy="210" r="170" fill="none"
+              stroke="rgba(255,179,0,.06)" stroke-width="1"
+              stroke-dasharray="8 12"/>
+          </g>
+          <g class="orbit-ring orbit-ring-2" style="transform-origin:210px 210px">
+            <circle cx="210" cy="210" r="130" fill="none"
+              stroke="rgba(0,212,255,.07)" stroke-width="1"
+              stroke-dasharray="4 20"/>
+          </g>
+
+          <!-- Hex body -->
+          <polygon points="210,150 256,175 256,225 210,250 164,225 164,175"
+            fill="url(#bodyGrad)"
+            stroke="rgba(255,179,0,.45)" stroke-width="1.5"/>
+
+          <!-- PCB -->
+          <rect x="192" y="186" width="36" height="28" rx="3"
+            fill="rgba(48,59,150,.8)" stroke="rgba(100,130,220,.4)" stroke-width="1"/>
+          <rect x="197" y="190" width="26" height="20" rx="2"
+            fill="rgba(0,163,110,.85)"/>
+
+          <!-- 6 Legs -->
+          <g stroke-linecap="round" filter="url(#glow)">
+            <!-- L-Front -->
+            <line x1="175" y1="178" x2="130" y2="140" stroke="#e8eef5" stroke-width="5"/>
+            <line x1="130" y1="140" x2="96"  y2="110" stroke="rgba(0,212,255,.6)" stroke-width="3.5"/>
+            <line x1="96"  y1="110" x2="74"  y2="86"  stroke="rgba(0,212,255,.35)" stroke-width="2.5"/>
+            <circle cx="130" cy="140" r="5.5" fill="rgba(60,140,220,.9)" stroke="rgba(0,212,255,.6)" stroke-width="1.5"/>
+
+            <!-- L-Mid -->
+            <line x1="164" y1="200" x2="110" y2="200" stroke="#e8eef5" stroke-width="5"/>
+            <line x1="110" y1="200" x2="68"  y2="200" stroke="rgba(0,212,255,.6)" stroke-width="3.5"/>
+            <line x1="68"  y1="200" x2="40"  y2="200" stroke="rgba(0,212,255,.35)" stroke-width="2.5"/>
+            <circle cx="110" cy="200" r="5.5" fill="rgba(60,140,220,.9)" stroke="rgba(0,212,255,.6)" stroke-width="1.5"/>
+
+            <!-- L-Rear -->
+            <line x1="175" y1="222" x2="130" y2="262" stroke="#e8eef5" stroke-width="5"/>
+            <line x1="130" y1="262" x2="96"  y2="294" stroke="rgba(0,212,255,.6)" stroke-width="3.5"/>
+            <line x1="96"  y1="294" x2="74"  y2="318" stroke="rgba(0,212,255,.35)" stroke-width="2.5"/>
+            <circle cx="130" cy="262" r="5.5" fill="rgba(60,140,220,.9)" stroke="rgba(0,212,255,.6)" stroke-width="1.5"/>
+
+            <!-- R-Front -->
+            <line x1="245" y1="178" x2="290" y2="140" stroke="#e8eef5" stroke-width="5"/>
+            <line x1="290" y1="140" x2="324" y2="110" stroke="rgba(255,179,0,.6)" stroke-width="3.5"/>
+            <line x1="324" y1="110" x2="346" y2="86"  stroke="rgba(255,179,0,.35)" stroke-width="2.5"/>
+            <circle cx="290" cy="140" r="5.5" fill="rgba(220,140,0,.9)" stroke="rgba(255,179,0,.6)" stroke-width="1.5"/>
+
+            <!-- R-Mid -->
+            <line x1="256" y1="200" x2="310" y2="200" stroke="#e8eef5" stroke-width="5"/>
+            <line x1="310" y1="200" x2="352" y2="200" stroke="rgba(255,179,0,.6)" stroke-width="3.5"/>
+            <line x1="352" y1="200" x2="380" y2="200" stroke="rgba(255,179,0,.35)" stroke-width="2.5"/>
+            <circle cx="310" cy="200" r="5.5" fill="rgba(220,140,0,.9)" stroke="rgba(255,179,0,.6)" stroke-width="1.5"/>
+
+            <!-- R-Rear -->
+            <line x1="245" y1="222" x2="290" y2="262" stroke="#e8eef5" stroke-width="5"/>
+            <line x1="290" y1="262" x2="324" y2="294" stroke="rgba(255,179,0,.6)" stroke-width="3.5"/>
+            <line x1="324" y1="294" x2="346" y2="318" stroke="rgba(255,179,0,.35)" stroke-width="2.5"/>
+            <circle cx="290" cy="262" r="5.5" fill="rgba(220,140,0,.9)" stroke="rgba(255,179,0,.6)" stroke-width="1.5"/>
+          </g>
+
+          <!-- Glow dot at centre -->
+          <circle cx="210" cy="200" r="6" fill="var(--amber)" opacity=".9" filter="url(#glow)"/>
+          <circle cx="210" cy="200" r="2.5" fill="#fff"/>
+        </svg>
+
+        <!-- Floating labels -->
+        <div class="float-label fl-1">3-DOF LEG IK</div>
+        <div class="float-label fl-2">ESP32 MCU</div>
+        <div class="float-label fl-3">TRIPOD GAIT</div>
+        <div class="float-label fl-4">HTXT900 SERVO</div>
+      </div>
+    </section>
+
+    <!-- ── Stats ── -->
+    <div class="stats-row" id="stats-row"></div>
+
+    <!-- ── Courses ── -->
+    <div class="section-header">
+      <h2 class="section-title">COURSE<span>S</span></h2>
+      <span class="section-count" id="course-count">— courses</span>
+    </div>
+    <div class="courses-grid" id="courses-grid"></div>
+
+    <!-- ── Features ── -->
+    <div class="section-header">
+      <h2 class="section-title">WHAT'S <span>INSIDE</span></h2>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">🎬</div>
+        <div class="feat-title">Video Lessons</div>
+        <p class="feat-desc">Curated YouTube videos for each topic, organised by course with descriptions and key topics listed.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📦</div>
+        <div class="feat-title">3D Model Library</div>
+        <p class="feat-desc">Inspect real robot components in 3D — servos, PCBs, gears, sensors — rotate and examine every part.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🎨</div>
+        <div class="feat-title">3D Designer</div>
+        <p class="feat-desc">Build your own 3D assemblies from primitives. Add shapes, colour them, position them, and save your design.</p>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <footer class="footer">
+    <span class="footer-brand">NIGHTFURY LEARN</span>
+    <span>Robotics · Electronics · Engineering</span>
+    <span id="footer-year"></span>
+  </footer>
+</div><!-- /page -->
+
+<script type="module">
+import { COURSES, STATS } from './assets/data.js';
+
+// Clock
+setInterval(() => {
+  const d = new Date();
+  document.getElementById('nav-clock').textContent =
+    d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}, 1000);
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+// Stats
+const statsRow = document.getElementById('stats-row');
+STATS.forEach(s => {
+  statsRow.innerHTML += `
+    <div class="stat-cell">
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`;
+});
+
+// Courses
+const grid = document.getElementById('courses-grid');
+document.getElementById('course-count').textContent = `${COURSES.length} courses`;
+
+const COLOR_TAG = {
+  amber: 'tag-amber', cyan: 'tag-cyan',
+  purple: 'tag-purple', green: 'tag-green'
+};
+
+COURSES.forEach(c => {
+  grid.innerHTML += `
+    <div class="course-card" data-color="${c.color}"
+         onclick="location.href='courses.html?id=${c.id}'">
+      <div class="cc-top">
+        <span class="cc-icon">${c.icon}</span>
+        <div class="cc-meta">
+          <span class="tag ${COLOR_TAG[c.color]}">${c.tag}</span>
+          <span class="cc-level">${c.level}</span>
+        </div>
+      </div>
+      <div class="cc-title">${c.title}</div>
+      <p class="cc-desc">${c.description}</p>
+      <div class="cc-footer">
+        <span class="cc-count">${c.lessons.length} LESSONS</span>
+        <span class="cc-arrow">→</span>
+      </div>
+    </div>`;
+});
+</script>
+</body>
+</html>

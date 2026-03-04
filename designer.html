@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NightFury Learn · 3D Designer</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* ── Layout ─────────────────────────────────────── */
+.designer-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 240px;
+  height: calc(100vh - var(--nav-h));
+}
+
+/* ── Left toolbar ────────────────────────────────── */
+.toolbar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; padding: 16px 12px;
+}
+.toolbar-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: .18em; color: var(--text3);
+  text-transform: uppercase;
+  padding: 0 4px; margin-bottom: 8px; margin-top: 16px;
+}
+.toolbar-label:first-child { margin-top: 0; }
+
+.shape-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px; margin-bottom: 8px;
+}
+.shape-btn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 10px 6px;
+  background: var(--panel2); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; color: var(--text2);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .05em;
+  transition: all .2s;
+}
+.shape-btn:hover { border-color: var(--amber); color: var(--amber); }
+.shape-btn .sb-icon { font-size: 20px; }
+
+/* Colour picker strip */
+.color-strip { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.color-swatch {
+  width: 24px; height: 24px; border-radius: 4px;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform .15s, border-color .15s;
+}
+.color-swatch:hover   { transform: scale(1.2); }
+.color-swatch.active  { border-color: #fff; }
+
+/* Material buttons */
+.mat-grid { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.mat-btn {
+  padding: 7px 10px;
+  background: var(--panel2); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; color: var(--text2);
+  font-family: var(--font-mono); font-size: 10px; text-align: left;
+  transition: all .2s;
+}
+.mat-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.mat-btn.active { border-color: var(--cyan); color: var(--cyan);
+                   background: rgba(0,212,255,.06); }
+
+/* Action buttons */
+.action-btns { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: 16px; }
+
+/* ── Viewport ────────────────────────────────────── */
+.viewport {
+  position: relative; background: #060810;
+  overflow: hidden;
+}
+#des-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.vp-top-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(6,8,16,.9) 0%, transparent 100%);
+  pointer-events: none;
+}
+.vp-title {
+  font-family: var(--font-mono); font-size: 10px;
+  color: rgba(255,255,255,.25); letter-spacing: .12em;
+}
+.vp-stats {
+  font-family: var(--font-mono); font-size: 9px;
+  color: rgba(255,255,255,.2); letter-spacing: .08em;
+}
+
+.vp-bottom {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; pointer-events: all;
+}
+.vp-btn {
+  padding: 7px 14px;
+  background: rgba(15,20,32,.88); border: 1px solid var(--border2);
+  border-radius: var(--radius); color: var(--text2);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em;
+  cursor: pointer; transition: all .2s;
+}
+.vp-btn:hover { border-color: var(--amber); color: var(--amber); }
+.vp-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* Axis indicator corner */
+.axis-corner {
+  position: absolute; bottom: 60px; right: 16px;
+  font-family: var(--font-mono); font-size: 9px; line-height: 1.8;
+  color: rgba(255,255,255,.18); pointer-events: none;
+  text-align: right;
+}
+.ax { color: rgba(255,80,80,.45); }
+.ay { color: rgba(80,255,80,.45); }
+.az { color: rgba(80,160,255,.45); }
+
+/* Selection highlight */
+.sel-hint {
+  position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 9px;
+  color: rgba(255,179,0,.5); letter-spacing: .1em;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+
+/* ── Right: properties ───────────────────────────── */
+.properties {
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto; padding: 16px 14px;
+}
+.prop-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: .18em; color: var(--text3);
+  text-transform: uppercase; margin-bottom: 8px; margin-top: 16px;
+}
+.prop-label:first-child { margin-top: 0; }
+
+.prop-row {
+  display: grid; grid-template-columns: 28px 1fr;
+  align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.prop-axis {
+  font-family: var(--font-mono); font-size: 10px;
+  font-weight: 700; color: var(--text3);
+}
+.prop-input {
+  width: 100%; padding: 6px 10px;
+  background: var(--panel2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+  outline: none; transition: border-color .2s;
+}
+.prop-input:focus { border-color: var(--amber); }
+.prop-input::-webkit-inner-spin-button { display: none; }
+
+.object-list {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-bottom: 12px;
+}
+.obj-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius);
+  border: 1px solid transparent; cursor: pointer;
+  font-family: var(--font-ui); font-size: 12px; color: var(--text2);
+  transition: all .2s;
+}
+.obj-item:hover  { background: var(--panel2); color: var(--text); }
+.obj-item.active { border-color: rgba(255,179,0,.25);
+                    background: rgba(255,179,0,.05); color: var(--amber); }
+.obj-dot {
+  width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+}
+.obj-del {
+  margin-left: auto; color: var(--text3);
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 0 2px;
+  transition: color .2s;
+}
+.obj-del:hover { color: var(--red); }
+
+.empty-props {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text3); letter-spacing: .08em;
+  text-align: center; padding: 24px 0;
+  line-height: 1.8;
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo">NIGHT<span>FURY</span></div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="courses.html">Courses</a>
+    <a href="viewer.html">3D Library</a>
+    <a href="designer.html" class="active">3D Designer</a>
+  </div>
+  <div class="nav-right">
+    <span id="obj-count-badge" class="nav-badge">0 OBJECTS</span>
+  </div>
+</nav>
+
+<div class="page" style="padding-top:var(--nav-h)">
+  <div class="designer-layout">
+
+    <!-- ── Left toolbar ── -->
+    <div class="toolbar">
+      <div class="toolbar-label">Add Shape</div>
+      <div class="shape-grid">
+        <button class="shape-btn" onclick="addShape('box')"><span class="sb-icon">⬛</span>Box</button>
+        <button class="shape-btn" onclick="addShape('sphere')"><span class="sb-icon">⭕</span>Sphere</button>
+        <button class="shape-btn" onclick="addShape('cylinder')"><span class="sb-icon">🔷</span>Cylinder</button>
+        <button class="shape-btn" onclick="addShape('cone')"><span class="sb-icon">🔺</span>Cone</button>
+        <button class="shape-btn" onclick="addShape('torus')"><span class="sb-icon">⬡</span>Torus</button>
+        <button class="shape-btn" onclick="addShape('plane')"><span class="sb-icon">▬</span>Plane</button>
+      </div>
+
+      <div class="toolbar-label">Colour</div>
+      <div class="color-strip" id="color-strip"></div>
+
+      <div class="toolbar-label">Material</div>
+      <div class="mat-grid" id="mat-grid"></div>
+
+      <div class="toolbar-label">Transform</div>
+      <button class="shape-btn" style="width:100%;flex-direction:row;gap:8px;padding:9px 12px"
+        onclick="setMode('translate')">↔ Move</button>
+      <button class="shape-btn" style="width:100%;flex-direction:row;gap:8px;padding:9px 12px;margin-top:5px"
+        onclick="setMode('rotate')">↻ Rotate</button>
+      <button class="shape-btn" style="width:100%;flex-direction:row;gap:8px;padding:9px 12px;margin-top:5px"
+        onclick="setMode('scale')">⤡ Scale</button>
+
+      <div class="action-btns">
+        <button class="btn btn-amber btn-sm" onclick="saveDesign()">💾 SAVE</button>
+        <button class="btn btn-ghost btn-sm"  onclick="loadDesign()">📂 LOAD</button>
+        <button class="btn btn-ghost btn-sm"  onclick="clearScene()">🗑 CLEAR</button>
+      </div>
+    </div>
+
+    <!-- ── Viewport ── -->
+    <div class="viewport" id="viewport">
+      <canvas id="des-canvas"></canvas>
+      <div class="vp-top-bar">
+        <span class="vp-title">NIGHTFURY · 3D DESIGNER</span>
+        <span class="vp-stats" id="vp-stats">0 objects · 0 faces</span>
+      </div>
+      <div class="sel-hint" id="sel-hint" style="opacity:0">CLICK OBJECT TO SELECT</div>
+      <div class="axis-corner">
+        <div class="ax">X →</div>
+        <div class="ay">Y ↑</div>
+        <div class="az">Z ·</div>
+      </div>
+      <div class="vp-bottom">
+        <button class="vp-btn" onclick="resetView()">⟳ RESET VIEW</button>
+        <button class="vp-btn" onclick="toggleGrid()">⊞ GRID</button>
+        <button class="vp-btn" onclick="toggleWireframe()">⬡ WIRE</button>
+        <button class="vp-btn danger" onclick="deleteSelected()">✕ DELETE</button>
+      </div>
+    </div>
+
+    <!-- ── Right properties ── -->
+    <div class="properties">
+      <div class="prop-label">Scene Objects</div>
+      <div class="object-list" id="object-list">
+        <div class="empty-props">No objects yet.<br>Add a shape to begin.</div>
+      </div>
+
+      <div class="prop-label">Position</div>
+      <div class="prop-row"><span class="prop-axis ax">X</span>
+        <input class="prop-input" id="px" type="number" step="0.1" value="0" oninput="applyProp('px')"></div>
+      <div class="prop-row"><span class="prop-axis ay">Y</span>
+        <input class="prop-input" id="py" type="number" step="0.1" value="0" oninput="applyProp('py')"></div>
+      <div class="prop-row"><span class="prop-axis az">Z</span>
+        <input class="prop-input" id="pz" type="number" step="0.1" value="0" oninput="applyProp('pz')"></div>
+
+      <div class="prop-label">Rotation (°)</div>
+      <div class="prop-row"><span class="prop-axis ax">X</span>
+        <input class="prop-input" id="rx" type="number" step="1" value="0" oninput="applyProp('rx')"></div>
+      <div class="prop-row"><span class="prop-axis ay">Y</span>
+        <input class="prop-input" id="ry" type="number" step="1" value="0" oninput="applyProp('ry')"></div>
+      <div class="prop-row"><span class="prop-axis az">Z</span>
+        <input class="prop-input" id="rz" type="number" step="1" value="0" oninput="applyProp('rz')"></div>
+
+      <div class="prop-label">Scale</div>
+      <div class="prop-row"><span class="prop-axis ax">X</span>
+        <input class="prop-input" id="sx" type="number" step="0.1" value="1" oninput="applyProp('sx')"></div>
+      <div class="prop-row"><span class="prop-axis ay">Y</span>
+        <input class="prop-input" id="sy" type="number" step="0.1" value="1" oninput="applyProp('sy')"></div>
+      <div class="prop-row"><span class="prop-axis az">Z</span>
+        <input class="prop-input" id="sz" type="number" step="0.1" value="1" oninput="applyProp('sz')"></div>
+
+      <div class="prop-label">Name</div>
+      <input class="prop-input" id="obj-name" placeholder="Object name…"
+        style="margin-bottom:16px" oninput="applyProp('name')">
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Scene setup ─────────────────────────────────────────────
+const canvas   = document.getElementById('des-canvas');
+const viewport = document.getElementById('viewport');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.setClearColor(0x060810);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+camera.position.set(6, 5, 8);
+
+// Lights
+scene.add(new THREE.AmbientLight(0x334455, 0.7));
+const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+sun.position.set(10, 15, 8); sun.castShadow = true; scene.add(sun);
+scene.add(new THREE.DirectionalLight(0x4488cc, 0.35).position.set(-6, -4, -8));
+const fill = new THREE.DirectionalLight(0x4488cc, 0.35);
+fill.position.set(-6,-4,-8); scene.add(fill);
+
+// Grid
+let gridHelper = new THREE.GridHelper(20, 40, 0x1c2538, 0x0f1420);
+scene.add(gridHelper);
+
+// Resize
+function resize() {
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(viewport);
+resize();
+
+// ── Orbit ───────────────────────────────────────────────────
+let isDrag = false, prevM = {x:0,y:0};
+let sph = { theta: 0.6, phi: 0.9, radius: 12 };
+let target = new THREE.Vector3(0,0,0);
+
+function updateCam() {
+  camera.position.set(
+    target.x + sph.radius * Math.sin(sph.phi) * Math.sin(sph.theta),
+    target.y + sph.radius * Math.cos(sph.phi),
+    target.z + sph.radius * Math.sin(sph.phi) * Math.cos(sph.theta)
+  );
+  camera.lookAt(target);
+}
+updateCam();
+
+canvas.addEventListener('mousedown', e => { if(e.button===2||e.button===1){isDrag=true; prevM={x:e.clientX,y:e.clientY};} });
+window.addEventListener('mouseup',   () => isDrag = false);
+window.addEventListener('mousemove', e => {
+  if (!isDrag) return;
+  const dx = e.clientX - prevM.x, dy = e.clientY - prevM.y;
+  sph.theta -= dx * 0.01;
+  sph.phi = Math.max(0.05, Math.min(Math.PI-0.05, sph.phi + dy * 0.01));
+  prevM = {x:e.clientX, y:e.clientY};
+  updateCam();
+});
+canvas.addEventListener('wheel', e => {
+  sph.radius = Math.max(2, Math.min(50, sph.radius + e.deltaY * 0.02));
+  updateCam();
+}, {passive:true});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Left-drag to orbit too (when not over object)
+let leftDrag = false;
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 0) { leftDrag = true; prevM = {x:e.clientX,y:e.clientY}; }
+});
+canvas.addEventListener('mousemove', e => {
+  if (!leftDrag || draggingObj) return;
+  const dx = e.clientX - prevM.x, dy = e.clientY - prevM.y;
+  sph.theta -= dx * 0.008;
+  sph.phi = Math.max(0.05, Math.min(Math.PI-0.05, sph.phi + dy * 0.008));
+  prevM = {x:e.clientX,y:e.clientY};
+  updateCam();
+});
+window.addEventListener('mouseup', () => { leftDrag = false; draggingObj = false; });
+
+// ── State ───────────────────────────────────────────────────
+const objects    = [];          // { mesh, name, color, matType }
+let selected     = null;
+let wireframe    = false;
+let draggingObj  = false;
+let transformMode = 'translate';
+
+// Colours palette
+const COLORS = [
+  '#e8eef5','#ffb300','#00d4ff','#00e676','#ff3d5a',
+  '#9c56f0','#ff6b35','#64b5f6','#a5d6a7','#f48fb1',
+  '#ffd54f','#80cbc4','#ce93d8','#bcaaa4','#607d8b'
+];
+let activeColor = COLORS[1];
+
+// Materials
+const MAT_TYPES = [
+  { id: 'standard',  label: 'Plastic (Matte)',    roughness: 0.7, metalness: 0.05 },
+  { id: 'shiny',     label: 'Plastic (Shiny)',    roughness: 0.1, metalness: 0.0  },
+  { id: 'metal',     label: 'Metal',              roughness: 0.3, metalness: 0.9  },
+  { id: 'rubber',    label: 'Rubber',             roughness: 0.95, metalness: 0.0 },
+  { id: 'glass',     label: 'Glass',              roughness: 0.0, metalness: 0.0, transparent: true, opacity: 0.35 },
+  { id: 'emissive',  label: 'Glowing',            roughness: 0.6, metalness: 0.0, emissive: true },
+];
+let activeMat = 'standard';
+
+// ── Colour strip ────────────────────────────────────────────
+const strip = document.getElementById('color-strip');
+COLORS.forEach(c => {
+  const sw = document.createElement('div');
+  sw.className = `color-swatch ${c===activeColor?'active':''}`;
+  sw.style.background = c;
+  sw.onclick = () => {
+    activeColor = c;
+    document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+    sw.classList.add('active');
+    if (selected) applyColorToSelected(c);
+  };
+  strip.appendChild(sw);
+});
+
+// ── Material buttons ─────────────────────────────────────────
+const matGrid = document.getElementById('mat-grid');
+MAT_TYPES.forEach(m => {
+  const btn = document.createElement('button');
+  btn.className = `mat-btn ${m.id===activeMat?'active':''}`;
+  btn.textContent = m.label;
+  btn.onclick = () => {
+    activeMat = m.id;
+    document.querySelectorAll('.mat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if (selected) applyMatToSelected(m.id);
+  };
+  matGrid.appendChild(btn);
+});
+
+// ── Build material ───────────────────────────────────────────
+function buildMat(colorHex, matType) {
+  const m = MAT_TYPES.find(x=>x.id===matType) || MAT_TYPES[0];
+  const opts = {
+    color: new THREE.Color(colorHex),
+    roughness: m.roughness,
+    metalness: m.metalness,
+  };
+  if (m.transparent) { opts.transparent = true; opts.opacity = m.opacity; }
+  if (m.emissive) { opts.emissive = new THREE.Color(colorHex); opts.emissiveIntensity = 0.4; }
+  return new THREE.MeshStandardMaterial(opts);
+}
+
+// ── Add shape ────────────────────────────────────────────────
+let objCounter = 0;
+window.addShape = function(type) {
+  let geo;
+  switch(type) {
+    case 'box':      geo = new THREE.BoxGeometry(1,1,1); break;
+    case 'sphere':   geo = new THREE.SphereGeometry(0.6, 24, 16); break;
+    case 'cylinder': geo = new THREE.CylinderGeometry(0.5,0.5,1.2,24); break;
+    case 'cone':     geo = new THREE.ConeGeometry(0.6,1.4,24); break;
+    case 'torus':    geo = new THREE.TorusGeometry(0.6,0.22,16,48); break;
+    case 'plane':    geo = new THREE.PlaneGeometry(1.5,1.5); break;
+    default:         geo = new THREE.BoxGeometry(1,1,1);
+  }
+  const mat  = buildMat(activeColor, activeMat);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = mesh.receiveShadow = true;
+  mesh.position.set((Math.random()-.5)*2, 0.5, (Math.random()-.5)*2);
+  mesh.userData = { id: ++objCounter, name: `${type}_${objCounter}`,
+                    color: activeColor, matType: activeMat };
+  scene.add(mesh);
+  objects.push(mesh);
+  selectObject(mesh);
+  updateObjList();
+  updateStats();
+};
+
+// ── Select ───────────────────────────────────────────────────
+function selectObject(obj) {
+  if (selected) {
+    selected.material.emissiveIntensity =
+      (selected.userData.matType === 'emissive') ? 0.4 : 0;
+  }
+  selected = obj;
+  if (!obj) { clearProps(); return; }
+  obj.material.emissiveIntensity = 0.35;
+  obj.material.emissive = new THREE.Color(0xffb300);
+  updateProps(obj);
+  document.getElementById('obj-name').value = obj.userData.name;
+  document.querySelectorAll('.obj-item').forEach(el =>
+    el.classList.toggle('active', parseInt(el.dataset.id) === obj.userData.id));
+}
+
+function updateProps(obj) {
+  document.getElementById('px').value = +obj.position.x.toFixed(2);
+  document.getElementById('py').value = +obj.position.y.toFixed(2);
+  document.getElementById('pz').value = +obj.position.z.toFixed(2);
+  document.getElementById('rx').value = +(obj.rotation.x*180/Math.PI).toFixed(1);
+  document.getElementById('ry').value = +(obj.rotation.y*180/Math.PI).toFixed(1);
+  document.getElementById('rz').value = +(obj.rotation.z*180/Math.PI).toFixed(1);
+  document.getElementById('sx').value = +obj.scale.x.toFixed(2);
+  document.getElementById('sy').value = +obj.scale.y.toFixed(2);
+  document.getElementById('sz').value = +obj.scale.z.toFixed(2);
+  document.getElementById('obj-name').value = obj.userData.name;
+}
+
+function clearProps() {
+  ['px','py','pz','rx','ry','rz'].forEach(id => document.getElementById(id).value = '0');
+  ['sx','sy','sz'].forEach(id => document.getElementById(id).value = '1');
+  document.getElementById('obj-name').value = '';
+}
+
+window.applyProp = function(prop) {
+  if (!selected) return;
+  const v = parseFloat(document.getElementById(prop).value);
+  if (isNaN(v)) return;
+  if      (prop==='px') selected.position.x = v;
+  else if (prop==='py') selected.position.y = v;
+  else if (prop==='pz') selected.position.z = v;
+  else if (prop==='rx') selected.rotation.x = v*Math.PI/180;
+  else if (prop==='ry') selected.rotation.y = v*Math.PI/180;
+  else if (prop==='rz') selected.rotation.z = v*Math.PI/180;
+  else if (prop==='sx') selected.scale.x = Math.max(0.01, v);
+  else if (prop==='sy') selected.scale.y = Math.max(0.01, v);
+  else if (prop==='sz') selected.scale.z = Math.max(0.01, v);
+  else if (prop==='name') { selected.userData.name = document.getElementById('obj-name').value; updateObjList(); }
+};
+
+function applyColorToSelected(hex) {
+  if (!selected) return;
+  selected.userData.color = hex;
+  selected.material.color.set(hex);
+  if (selected.userData.matType === 'emissive')
+    selected.material.emissive.set(hex);
+  updateObjList();
+}
+function applyMatToSelected(matType) {
+  if (!selected) return;
+  selected.userData.matType = matType;
+  selected.material = buildMat(selected.userData.color, matType);
+  selected.material.emissive = new THREE.Color(0xffb300);
+  selected.material.emissiveIntensity = 0.35;
+}
+
+// ── Object list UI ────────────────────────────────────────────
+function updateObjList() {
+  const list = document.getElementById('object-list');
+  document.getElementById('obj-count-badge').textContent = `${objects.length} OBJECTS`;
+  if (!objects.length) {
+    list.innerHTML = '<div class="empty-props">No objects yet.<br>Add a shape to begin.</div>';
+    return;
+  }
+  list.innerHTML = objects.map(obj => `
+    <div class="obj-item ${obj===selected?'active':''}" data-id="${obj.userData.id}"
+         onclick="selectById(${obj.userData.id})">
+      <div class="obj-dot" style="background:${obj.userData.color}"></div>
+      <span>${obj.userData.name}</span>
+      <button class="obj-del" onclick="event.stopPropagation();deleteById(${obj.userData.id})">✕</button>
+    </div>`).join('');
+}
+
+window.selectById = id => {
+  const obj = objects.find(o => o.userData.id === id);
+  if (obj) selectObject(obj);
+  updateObjList();
+};
+window.deleteById = id => {
+  const i = objects.findIndex(o => o.userData.id === id);
+  if (i < 0) return;
+  scene.remove(objects[i]);
+  if (selected === objects[i]) selectObject(null);
+  objects.splice(i,1);
+  updateObjList(); updateStats();
+};
+
+// ── Stats ─────────────────────────────────────────────────────
+function updateStats() {
+  let faces = 0;
+  objects.forEach(o => { if(o.geometry?.index) faces += o.geometry.index.count/3; });
+  document.getElementById('vp-stats').textContent =
+    `${objects.length} objects · ${Math.round(faces)} faces`;
+}
+
+// ── Raycasting: click to select ───────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let mouseDownTime = 0;
+
+canvas.addEventListener('mousedown', () => { mouseDownTime = Date.now(); });
+canvas.addEventListener('mouseup', e => {
+  if (Date.now() - mouseDownTime > 200) return; // dragged, not clicked
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(objects);
+  if (hits.length) {
+    selectObject(hits[0].object);
+    updateObjList();
+    document.getElementById('sel-hint').style.opacity = 0;
+  } else {
+    selectObject(null);
+    updateObjList();
+  }
+});
+
+// Keyboard: arrow keys nudge selected object
+window.addEventListener('keydown', e => {
+  if (!selected) return;
+  const step = e.shiftKey ? 0.5 : 0.1;
+  if (e.key==='ArrowLeft')  { selected.position.x -= step; }
+  if (e.key==='ArrowRight') { selected.position.x += step; }
+  if (e.key==='ArrowUp')    { selected.position.z -= step; }
+  if (e.key==='ArrowDown')  { selected.position.z += step; }
+  if (e.key==='PageUp')     { selected.position.y += step; }
+  if (e.key==='PageDown')   { selected.position.y -= step; }
+  if (e.key==='Delete' || e.key==='Backspace') deleteSelected();
+  if (selected) updateProps(selected);
+});
+
+// ── Viewport controls ─────────────────────────────────────────
+window.resetView  = () => { sph={theta:0.6,phi:0.9,radius:12}; target.set(0,0,0); updateCam(); };
+window.toggleGrid = () => { gridHelper.visible = !gridHelper.visible; };
+window.toggleWireframe = () => {
+  wireframe = !wireframe;
+  objects.forEach(o => o.material.wireframe = wireframe);
+};
+window.deleteSelected = () => {
+  if (selected) deleteById(selected.userData.id);
+};
+window.setMode = mode => transformMode = mode;
+
+// ── Save / Load ───────────────────────────────────────────────
+window.saveDesign = () => {
+  const data = objects.map(o => ({
+    type: o.geometry.type,
+    name: o.userData.name,
+    color: o.userData.color,
+    matType: o.userData.matType,
+    position: o.position.toArray(),
+    rotation: [o.rotation.x, o.rotation.y, o.rotation.z],
+    scale: o.scale.toArray(),
+  }));
+  localStorage.setItem('nf-design', JSON.stringify(data));
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ SAVED!';
+  setTimeout(() => btn.textContent = orig, 1500);
+};
+
+window.loadDesign = () => {
+  const raw = localStorage.getItem('nf-design');
+  if (!raw) return alert('No saved design found.');
+  clearScene();
+  const GEO_MAP = {
+    BoxGeometry:      () => new THREE.BoxGeometry(1,1,1),
+    SphereGeometry:   () => new THREE.SphereGeometry(0.6,24,16),
+    CylinderGeometry: () => new THREE.CylinderGeometry(0.5,0.5,1.2,24),
+    ConeGeometry:     () => new THREE.ConeGeometry(0.6,1.4,24),
+    TorusGeometry:    () => new THREE.TorusGeometry(0.6,0.22,16,48),
+    PlaneGeometry:    () => new THREE.PlaneGeometry(1.5,1.5),
+  };
+  JSON.parse(raw).forEach(d => {
+    const geoFn = GEO_MAP[d.type] || GEO_MAP['BoxGeometry'];
+    const mesh = new THREE.Mesh(geoFn(), buildMat(d.color, d.matType));
+    mesh.castShadow = mesh.receiveShadow = true;
+    mesh.position.fromArray(d.position);
+    mesh.rotation.set(...d.rotation);
+    mesh.scale.fromArray(d.scale);
+    mesh.userData = { id: ++objCounter, name: d.name, color: d.color, matType: d.matType };
+    scene.add(mesh);
+    objects.push(mesh);
+  });
+  updateObjList(); updateStats();
+};
+
+window.clearScene = () => {
+  objects.forEach(o => scene.remove(o));
+  objects.length = 0;
+  selectObject(null);
+  updateObjList(); updateStats();
+};
+
+// ── Show hint on first load ───────────────────────────────────
+const hint = document.getElementById('sel-hint');
+hint.style.opacity = 1;
+setTimeout(() => hint.style.opacity = 0, 3000);
+
+// ── Render loop ───────────────────────────────────────────────
+function render() {
+  requestAnimationFrame(render);
+  if (selected) updateProps(selected);
+  renderer.render(scene, camera);
+}
+render();
+</script>
+</body>
+</html>
