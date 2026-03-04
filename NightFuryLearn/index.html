@@ -7,92 +7,106 @@
 <link rel="stylesheet" href="assets/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-/* ── HTTYD Hero ────────────────────────────────── */
+/* ── Full page with scroll ── */
+.page { overflow-x:hidden; }
+
+/* ── Hero = full viewport canvas ── */
 .hero {
-  position:relative;
-  height:calc(100vh - var(--nav-h));
+  position:relative; width:100%; height:100vh;
   overflow:hidden;
-  display:flex; align-items:center;
 }
-#hero-canvas {
-  position:absolute; inset:0;
-  width:100%; height:100%; display:block;
-}
+#hero-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+
 .hero-content {
-  position:relative; z-index:10;
-  max-width:640px; padding:0 64px;
+  position:relative; z-index:10; height:100%;
+  display:flex; flex-direction:column; justify-content:center;
+  max-width:680px; padding:0 64px;
 }
-.hero-tag {
+.hero-eyebrow {
   display:inline-flex; align-items:center; gap:10px;
   font-family:var(--font-mono); font-size:10px; letter-spacing:.22em;
-  color:var(--teal); text-transform:uppercase; margin-bottom:20px;
-  padding:6px 14px; border:1px solid rgba(0,212,184,.3);
-  border-radius:20px; background:rgba(0,212,184,.07);
+  color:var(--plasma); text-transform:uppercase;
+  padding:6px 14px; border:1px solid rgba(0,200,232,.25);
+  border-radius:20px; background:rgba(0,200,232,.05);
+  margin-bottom:20px; width:fit-content;
 }
-.hero-tag::before { content:'◆'; font-size:7px; }
+.hero-eyebrow::before { content:'◆'; font-size:7px; }
+
 .hero-title {
   font-family:var(--font-display);
-  font-size:clamp(68px,9vw,130px);
-  line-height:.92; letter-spacing:.04em;
-  margin-bottom:6px;
+  line-height:.9; letter-spacing:.04em;
+  margin-bottom:8px;
 }
-.hero-title .t1 { color:var(--teal); display:block; }
-.hero-title .t2 { color:var(--orange); display:block; }
-.hero-title .t3 { color:var(--text); display:block; font-size:.55em; letter-spacing:.18em; }
-.hero-desc {
-  font-size:16px; color:var(--text2); line-height:1.8;
-  max-width:480px; margin:20px 0 36px;
-}
-.hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+.hero-title .l1 { font-size:clamp(60px,9vw,120px); color:#ffffff; display:block; }
+.hero-title .l2 { font-size:clamp(60px,9vw,120px); color:var(--red); display:block; }
+.hero-title .l3 { font-size:clamp(28px,3.5vw,48px); color:var(--plasma); display:block; letter-spacing:.24em; margin-top:8px; }
+
+.hero-desc { font-size:16px; color:var(--text2); line-height:1.8; max-width:500px; margin:20px 0 32px; }
+.hero-btns { display:flex; gap:12px; flex-wrap:wrap; }
+
 .hero-hint {
-  position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
-  font-family:var(--font-mono); font-size:9px; color:rgba(0,212,184,.45);
-  letter-spacing:.15em; text-align:center;
+  position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
+  font-family:var(--font-mono); font-size:9px; color:rgba(0,200,232,.4);
+  letter-spacing:.16em; text-align:center;
   animation:bob 2.2s ease-in-out infinite;
 }
 @keyframes bob {
-  0%,100%{ transform:translateX(-50%) translateY(0); }
-  50%    { transform:translateX(-50%) translateY(-7px); }
+  0%,100%{ transform:translateX(-50%) translateY(0); opacity:.4; }
+  50%    { transform:translateX(-50%) translateY(-7px); opacity:.8; }
+}
+/* Scroll indicator arrow */
+.scroll-arrow {
+  position:absolute; bottom:52px; left:50%; transform:translateX(-50%);
+  font-size:18px; color:rgba(0,200,232,.4);
+  animation:bounce 1.8s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100% { transform:translateX(-50%) translateY(0); }
+  50%     { transform:translateX(-50%) translateY(8px); }
 }
 
-/* ── Stats ── */
+/* ── Sections below hero ── */
+.below-fold { background:var(--bg); position:relative; z-index:5; }
+.section { padding:64px 0; }
+.container { max-width:1200px; margin:0 auto; padding:0 40px; }
+
+/* Stats */
 .stats-row {
   display:grid; grid-template-columns:repeat(4,1fr);
-  background:var(--border); border:1px solid var(--border);
+  background:var(--border); border:1px solid var(--border2);
   border-radius:var(--radius-lg); overflow:hidden; gap:1px;
-  margin:48px 0 56px;
+  margin-bottom:64px;
 }
-.stat-cell { background:var(--panel); padding:26px 20px; text-align:center; }
-.stat-value { font-family:var(--font-display); font-size:48px; letter-spacing:.04em; line-height:1; }
-.sv-teal   { color:var(--teal); }
-.sv-orange { color:var(--orange); }
-.sv-purple { color:var(--purple); }
-.sv-gold   { color:var(--gold); }
+.stat-cell { background:var(--panel); padding:28px 20px; text-align:center; }
+.sv { font-family:var(--font-display); font-size:52px; letter-spacing:.04em; line-height:1; }
+.sv-0{color:var(--plasma)}.sv-1{color:var(--red)}.sv-2{color:var(--gold)}.sv-3{color:var(--green)}
 .stat-label { font-family:var(--font-mono); font-size:10px; color:var(--text3);
                letter-spacing:.14em; text-transform:uppercase; margin-top:6px; }
 
-/* ── Course cards ── */
-.courses-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:56px; }
+/* Course cards */
+.courses-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:64px; }
 .cc {
   background:var(--panel); border:2px solid var(--border);
   border-radius:var(--radius-lg); padding:28px; cursor:pointer;
   transition:all .25s; position:relative; overflow:hidden;
 }
 .cc::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:3px;
-  background:var(--cc-accent); transform:scaleX(0); transform-origin:left;
-  transition:transform .3s ease;
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(var(--cc-r),var(--cc-g),var(--cc-b),.04), transparent);
+  opacity:0; transition:opacity .3s;
 }
-.cc:hover { transform:translateY(-3px); }
-.cc:hover::before { transform:scaleX(1); }
-.cc[data-c="teal"]  { --cc-accent:var(--teal);  }
-.cc[data-c="orange"]{ --cc-accent:var(--orange); }
-.cc[data-c="purple"]{ --cc-accent:var(--purple); }
-.cc[data-c="green"] { --cc-accent:var(--green);  }
-.cc[data-c="teal"]:hover  { border-color:rgba(0,212,184,.5);  box-shadow:0 8px 40px rgba(0,212,184,.12); }
-.cc[data-c="orange"]:hover{ border-color:rgba(255,107,43,.5); box-shadow:0 8px 40px rgba(255,107,43,.12); }
-.cc[data-c="purple"]:hover{ border-color:rgba(124,58,237,.5); box-shadow:0 8px 40px rgba(124,58,237,.12); }
-.cc[data-c="green"]:hover { border-color:rgba(16,185,129,.5); box-shadow:0 8px 40px rgba(16,185,129,.1); }
+.cc::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--cc-accent); transform:scaleX(0); transform-origin:left; transition:transform .3s;
+}
+.cc:hover { transform:translateY(-4px); border-color:var(--cc-border); box-shadow:0 12px 48px rgba(0,0,0,.4); }
+.cc:hover::before { opacity:1; }
+.cc:hover::after { transform:scaleX(1); }
+.cc[data-c="plasma"]{ --cc-accent:var(--plasma); --cc-border:rgba(0,200,232,.4); --cc-r:0; --cc-g:200; --cc-b:232; }
+.cc[data-c="fire"]  { --cc-accent:var(--fire2); --cc-border:rgba(224,85,32,.4);  --cc-r:224;--cc-g:85; --cc-b:32; }
+.cc[data-c="purple"]{ --cc-accent:var(--purple);--cc-border:rgba(124,58,237,.4); --cc-r:124;--cc-g:58; --cc-b:237; }
+.cc[data-c="gold"]  { --cc-accent:var(--gold);  --cc-border:rgba(200,136,10,.4); --cc-r:200;--cc-g:136;--cc-b:10; }
+
 .cc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
 .cc-icon { font-size:44px; line-height:1; }
 .cc-meta { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
@@ -106,25 +120,40 @@
   border:2px solid var(--border2); display:flex; align-items:center;
   justify-content:center; color:var(--text2); transition:all .2s; font-size:14px;
 }
-.cc:hover .cc-arr { color:var(--teal); border-color:var(--teal); transform:translateX(4px); }
+.cc:hover .cc-arr { color:var(--plasma); border-color:var(--plasma); transform:translateX(4px); }
 
-/* ── Feature cards ── */
-.feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:56px; }
+/* Animated features */
+.feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:64px; }
 .feat {
   background:var(--panel); border:1px solid var(--border);
   border-radius:var(--radius-lg); padding:28px 22px;
-  transition:all .22s;
+  transition:all .22s; opacity:0; transform:translateY(20px);
 }
-.feat:hover { transform:translateY(-3px); border-color:var(--border2); }
+.feat.visible { opacity:1; transform:translateY(0); transition:opacity .5s ease, transform .5s ease; }
+.feat:hover { transform:translateY(-3px); border-color:var(--border2); box-shadow:0 8px 30px rgba(0,0,0,.3); }
 .feat-ico {
   width:52px; height:52px; border-radius:12px;
-  background:var(--panel2); border:2px solid var(--border);
-  display:flex; align-items:center; justify-content:center;
-  font-size:26px; margin-bottom:16px;
+  border:1px solid var(--border2); background:var(--panel2);
+  display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:16px;
 }
-.feat h3 { font-family:var(--font-ui); font-weight:700; font-size:17px;
-           letter-spacing:.04em; margin-bottom:8px; color:var(--text); }
+.feat h3 { font-family:var(--font-ui); font-weight:700; font-size:17px; letter-spacing:.04em; margin-bottom:8px; }
 .feat p  { font-size:13px; color:var(--text2); line-height:1.7; }
+
+/* CTA banner */
+.cta-banner {
+  background:linear-gradient(135deg,#0a1828,#0d0a20);
+  border:1px solid var(--border2); border-radius:var(--radius-lg);
+  padding:40px 48px; display:flex; align-items:center; gap:24px;
+  margin-bottom:64px; position:relative; overflow:hidden;
+}
+.cta-banner::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, var(--plasma), var(--red), var(--gold));
+}
+.cta-text { flex:1; }
+.cta-title { font-family:var(--font-display); font-size:36px; letter-spacing:.06em; margin-bottom:8px; }
+.cta-desc  { font-size:15px; color:var(--text2); line-height:1.7; }
+.cta-btns  { display:flex; flex-direction:column; gap:8px; }
 </style>
 </head>
 <body>
@@ -133,9 +162,11 @@
   <div class="nav-logo">NIGHT<span>FURY</span></div>
   <div class="nav-links">
     <a href="index.html" class="active">Home</a>
+    <a href="dashboard.html">Dashboard</a>
     <a href="courses.html">Courses</a>
     <a href="viewer.html">3D Library</a>
-    <a href="designer.html">3D Designer</a>
+    <a href="designer.html">Designer</a>
+    <a href="profile.html">Profile</a>
   </div>
   <div class="nav-right">
     <span class="nav-badge">SCHOOL EDITION</span>
@@ -145,75 +176,84 @@
 
 <div class="page">
 
-  <!-- ══════════ HERO + NIGHT FURY ══════════ -->
-  <section class="hero">
+  <!-- ═══ HERO — Toothless + Hiccup ═══ -->
+  <section class="hero" id="hero">
     <canvas id="hero-canvas"></canvas>
     <div class="hero-content">
-      <div class="hero-tag">NightFury Learn · Engineering Academy</div>
+      <div class="hero-eyebrow">NightFury Learn · Berk Engineering Academy</div>
       <h1 class="hero-title">
-        <span class="t1">NIGHT</span>
-        <span class="t2">FURY</span>
-        <span class="t3">LEARN</span>
+        <span class="l1">NIGHT</span>
+        <span class="l2">FURY</span>
+        <span class="l3">LEARN</span>
       </h1>
       <p class="hero-desc">
         Master Robotics, Electronics &amp; Engineering through video lessons,
-        interactive 3D models and a hands-on design studio — built for students.
+        interactive 3D models and a hands-on design studio — built for every student rider.
       </p>
       <div class="hero-btns">
-        <a href="courses.html"  class="btn btn-teal">🚀 Start Learning</a>
-        <a href="viewer.html"   class="btn btn-outline">📦 3D Models</a>
-        <a href="designer.html" class="btn btn-ghost">🎨 Designer</a>
+        <a href="dashboard.html" class="btn btn-plasma">⚡ My Dashboard</a>
+        <a href="courses.html"   class="btn btn-outline">🚀 Start Learning</a>
+        <a href="viewer.html"    class="btn btn-ghost">📦 3D Library</a>
       </div>
     </div>
-    <div class="hero-hint">◆ CLICK THE DRAGON · DRAG TO ORBIT ◆</div>
+    <div class="scroll-arrow">▼</div>
+    <div class="hero-hint">CLICK TOOTHLESS TO FIRE · DRAG TO ORBIT</div>
   </section>
 
-  <div class="container">
+  <!-- ═══ BELOW FOLD ═══ -->
+  <div class="below-fold">
+    <div class="section">
+      <div class="container">
 
-    <!-- Stats -->
-    <div class="stats-row" id="stats-row"></div>
+        <!-- Stats -->
+        <div class="stats-row" id="stats-row"></div>
 
-    <!-- Courses -->
-    <div class="section-header">
-      <h2 class="section-title">COURSE<span>S</span></h2>
-      <span class="section-count" id="cc-cnt"></span>
-    </div>
-    <div class="courses-grid" id="courses-grid"></div>
+        <!-- Courses -->
+        <div class="section-header">
+          <h2 class="section-title">COURSE<span>S</span></h2>
+          <span class="section-count" id="cc-cnt"></span>
+        </div>
+        <div class="courses-grid" id="courses-grid"></div>
 
-    <!-- Features -->
-    <div class="section-header">
-      <h2 class="section-title">WHAT'S <span>INSIDE</span></h2>
-    </div>
-    <div class="feat-grid">
-      <div class="feat">
-        <div class="feat-ico">🎬</div>
-        <h3>Video Lessons</h3>
-        <p>Curated YouTube videos for each topic, organised by course with key learning points highlighted.</p>
+        <!-- Features (scroll-animated) -->
+        <div class="section-header">
+          <h2 class="section-title">WHAT'S <span>INSIDE</span></h2>
+        </div>
+        <div class="feat-grid" id="feat-grid">
+          <div class="feat"><div class="feat-ico">🎬</div><h3>Video Lessons</h3><p>Curated YouTube videos for each topic, organized into progressive courses with key learning points.</p></div>
+          <div class="feat"><div class="feat-ico">📦</div><h3>3D Model Library</h3><p>Inspect real robot parts in full 3D — servos, PCBs, gears, sensors. Rotate and zoom like a pro.</p></div>
+          <div class="feat"><div class="feat-ico">🎨</div><h3>Blender-style Designer</h3><p>Build 3D assemblies with real transform gizmos. Move, rotate, scale, snap — just like Blender.</p></div>
+          <div class="feat"><div class="feat-ico">🐉</div><h3>Dragon Class Badges</h3><p>Earn dragon badges as you complete lessons — rise through the classes to become a Night Fury rider.</p></div>
+          <div class="feat"><div class="feat-ico">⏱️</div><h3>Focus Timer</h3><p>Pomodoro timer with animated dragon. Study hard, break well, track your sessions every day.</p></div>
+          <div class="feat"><div class="feat-ico">🤖</div><h3>AI Guide</h3><p>Hiccup or Astrid answers your questions using Gemini AI — in-character, encouraging, always ready.</p></div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-banner">
+          <div class="cta-text">
+            <div class="cta-title">READY TO RIDE?</div>
+            <div class="cta-desc">Set up your profile, choose your guide, and start your journey from Terrible Terror to Night Fury. Every Dragon Rider starts somewhere.</div>
+          </div>
+          <div class="cta-btns">
+            <a href="profile.html" class="btn btn-plasma">⚙ Set Up Profile</a>
+            <a href="courses.html" class="btn btn-ghost">Start Courses →</a>
+          </div>
+        </div>
+
       </div>
-      <div class="feat">
-        <div class="feat-ico">📦</div>
-        <h3>3D Model Library</h3>
-        <p>Inspect robot parts in full 3D — servos, PCBs, gears, sensors. Rotate, zoom, go wireframe.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ico">🎨</div>
-        <h3>3D Designer</h3>
-        <p>Build assemblies with real transform gizmos — move, rotate, scale, snap objects together like in Blender.</p>
-      </div>
     </div>
-
   </div>
 
-  <footer class="footer">
-    <span style="color:var(--teal)">NIGHTFURY LEARN</span>
-    <span>Robotics · Electronics · Engineering</span>
+  <footer class="footer" style="position:relative;z-index:5">
+    <span style="color:var(--plasma)">NIGHTFURY LEARN</span>
+    <span>Robotics · Electronics · Engineering · Berk, 12 days north of Hopeless</span>
     <span id="yr" style="font-family:var(--font-mono);font-size:10px;color:var(--text3)"></span>
   </footer>
 </div>
 
 <script src="assets/data.js"></script>
 <script>
-/* ── Clock ── */
+/* ── Clock & year ── */
 document.getElementById('yr').textContent = new Date().getFullYear();
 setInterval(function(){
   var d=new Date();
@@ -221,22 +261,20 @@ setInterval(function(){
 },1000);
 
 /* ── Stats ── */
-var STAT_COLS = ['sv-teal','sv-orange','sv-purple','sv-gold'];
 var sr = document.getElementById('stats-row');
 NF.STATS.forEach(function(s,i){
-  sr.innerHTML += '<div class="stat-cell"><div class="stat-value '+STAT_COLS[i]+'">'+s.value+'</div><div class="stat-label">'+s.label+'</div></div>';
+  sr.innerHTML+='<div class="stat-cell"><div class="sv sv-'+i+'">'+s.value+'</div><div class="stat-label">'+s.label+'</div></div>';
 });
 
 /* ── Courses ── */
 var cg = document.getElementById('courses-grid');
-var CTAG = {amber:'tag-amber',cyan:'tag-cyan',purple:'tag-purple',green:'tag-green',teal:'tag-teal',orange:'tag-orange'};
+var CTAG={plasma:'tag-plasma',fire:'tag-fire',purple:'tag-purple',gold:'tag-gold',
+          amber:'tag-gold',cyan:'tag-plasma',teal:'tag-plasma',orange:'tag-fire'};
 document.getElementById('cc-cnt').textContent = NF.COURSES.length+' courses';
-var CMAP = {amber:'teal',cyan:'teal',purple:'purple',green:'green'};
-NF.COURSES.forEach(function(c,i){
-  var col = ['teal','orange','purple','green'][i] || 'teal';
-  cg.innerHTML += '<div class="cc" data-c="'+col+'" onclick="location.href=\'courses.html?id='+c.id+'\'">'
+NF.COURSES.forEach(function(c){
+  cg.innerHTML+='<div class="cc" data-c="'+c.color+'" onclick="location.href=\'courses.html?id='+c.id+'\'">'
     +'<div class="cc-top"><span class="cc-icon">'+c.icon+'</span>'
-    +'<div class="cc-meta"><span class="tag '+CTAG[c.color]+'">'+c.tag+'</span>'
+    +'<div class="cc-meta"><span class="tag '+(CTAG[c.color]||'tag-plasma')+'">'+c.tag+'</span>'
     +'<span class="cc-lv">'+c.level+'</span></div></div>'
     +'<div class="cc-title">'+c.title+'</div>'
     +'<p class="cc-desc">'+c.description+'</p>'
@@ -244,408 +282,420 @@ NF.COURSES.forEach(function(c,i){
     +'<span class="cc-arr">→</span></div></div>';
 });
 
+/* ── Feature scroll animation ── */
+var feats = document.querySelectorAll('.feat');
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(e,i){
+    if(e.isIntersecting){
+      setTimeout(function(){e.target.classList.add('visible');},i*80);
+    }
+  });
+},{threshold:0.1});
+feats.forEach(function(f){ observer.observe(f); });
+
 /* ════════════════════════════════════════════════════
-   NIGHT FURY DRAGON — Three.js
-   Click = plasma blast | Drag = orbit camera
+   TOOTHLESS + HICCUP  —  Three.js Scene
+   • Toothless: black body, teal plasma eyes, red prosthetic tail fin
+   • Hiccup: sitting on back
+   • Dragon follows scroll position downward
+   • Click = plasma blast, drag = orbit
    ════════════════════════════════════════════════════ */
 (function(){
+  var heroEl = document.getElementById('hero');
   var canvas  = document.getElementById('hero-canvas');
-  var section = canvas.parentElement;
-
-  var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+  var renderer = new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled=true;
+  renderer.setClearColor(0x060810);
 
   var scene  = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a1828);
-  scene.fog = new THREE.FogExp2(0x0a1828, 0.01);
+  scene.fog  = new THREE.FogExp2(0x060810, 0.008);
+  scene.background = new THREE.Color(0x060810);
 
-  var camera = new THREE.PerspectiveCamera(50,1,0.1,500);
-  camera.position.set(-8, 4, 22);
+  var camera = new THREE.PerspectiveCamera(48,1,0.1,500);
+  camera.position.set(-4,3,22);
   camera.lookAt(0,0,0);
 
   /* ── Lights ── */
-  scene.add(new THREE.AmbientLight(0x1a3a5a, 1.0));
-  var moonLight = new THREE.DirectionalLight(0x8ab4d4, 0.9);
-  moonLight.position.set(-10,20,5); moonLight.castShadow=true; scene.add(moonLight);
-  var plasmaLight = new THREE.PointLight(0x00ffd4, 1.5, 25);
-  plasmaLight.position.set(0,3,8); scene.add(plasmaLight);
-  var rimLight = new THREE.DirectionalLight(0x0060a0, 0.5);
-  rimLight.position.set(12,4,-8); scene.add(rimLight);
+  scene.add(new THREE.AmbientLight(0x0a1828, 1.2));
+  var moonLight = new THREE.DirectionalLight(0x6080a0, 0.8);
+  moonLight.position.set(-12,20,8); moonLight.castShadow=true; scene.add(moonLight);
+  var plasmaGlow = new THREE.PointLight(0x00c8e8, 1.8, 20);
+  plasmaGlow.position.set(0,2,6); scene.add(plasmaGlow);
+  var redGlow = new THREE.PointLight(0xc42020, 0.6, 15);
+  redGlow.position.set(0,0,-4); scene.add(redGlow);
 
   /* ── Starfield ── */
-  (function(){
-    var geo=new THREE.BufferGeometry();
-    var pos=new Float32Array(1000*3);
-    for(var i=0;i<1000;i++){
-      pos[i*3]  =(Math.random()-.5)*300;
-      pos[i*3+1]=(Math.random()-.5)*300;
-      pos[i*3+2]=(Math.random()-.5)*300;
-    }
-    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-    scene.add(new THREE.Points(geo,new THREE.PointsMaterial({color:0xffffff,size:0.3,transparent:true,opacity:0.7})));
-  })();
+  var geo=new THREE.BufferGeometry();
+  var pos=new Float32Array(1200*3);
+  for(var i=0;i<1200;i++){pos[i*3]=(Math.random()-.5)*400;pos[i*3+1]=(Math.random()-.5)*400;pos[i*3+2]=(Math.random()-.5)*400;}
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(geo,new THREE.PointsMaterial({color:0xffffff,size:0.25,transparent:true,opacity:0.55})));
 
-  /* ── Aurora (animated planes) ── */
-  var auroras = [];
-  [0x004488, 0x006655, 0x220055].forEach(function(col,i){
-    var ag = new THREE.PlaneGeometry(40,8,1,1);
-    var am = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.07, side:THREE.DoubleSide});
-    var ap = new THREE.Mesh(ag,am);
-    ap.rotation.x = Math.PI/2 - 0.4;
-    ap.position.set(i*12-12, 18+i*3, -30);
-    scene.add(ap); auroras.push(ap);
-  });
+  /* ── Moon ── */
+  var moon=new THREE.Mesh(new THREE.SphereGeometry(3.5,24,16),
+    new THREE.MeshBasicMaterial({color:0xdde8f5}));
+  moon.position.set(-30,25,-80); scene.add(moon);
+  // Glow ring
+  var moonGeo=new THREE.RingGeometry(3.8,5.5,32);
+  var moonRing=new THREE.Mesh(moonGeo,new THREE.MeshBasicMaterial({color:0x3a4860,transparent:true,opacity:.3,side:THREE.DoubleSide}));
+  moonRing.position.copy(moon.position); moonRing.lookAt(camera.position); scene.add(moonRing);
 
-  /* ── Night Fury Materials ── */
-  var bodyMat = new THREE.MeshStandardMaterial({
-    color:0x0d141e, roughness:0.25, metalness:0.7,
-    emissive:0x0a1830, emissiveIntensity:0.2
-  });
-  var scaleMat = new THREE.MeshStandardMaterial({
-    color:0x0f1f30, roughness:0.15, metalness:0.85
-  });
-  var wingMat = new THREE.MeshStandardMaterial({
-    color:0x0a1020, roughness:0.7, metalness:0.05,
-    transparent:true, opacity:0.9, side:THREE.DoubleSide
-  });
-  var eyeMat = new THREE.MeshStandardMaterial({
-    color:0x00ffd4, emissive:0x00ffd4, emissiveIntensity:1.8, roughness:0
-  });
-  var pupilMat = new THREE.MeshStandardMaterial({ color:0x000000, roughness:1 });
-  var hornMat  = new THREE.MeshStandardMaterial({ color:0x0c1825, roughness:0.2, metalness:0.9 });
-  var finMat   = new THREE.MeshStandardMaterial({
-    color:0x061018, roughness:0.8, metalness:0.0,
-    transparent:true, opacity:0.85, side:THREE.DoubleSide
-  });
+  /* ── MATERIALS ── */
+  var bodyMat = new THREE.MeshStandardMaterial({color:0x0d0e12, roughness:0.2, metalness:0.75,
+    emissive:0x050710, emissiveIntensity:0.3});
+  var scaleMat= new THREE.MeshStandardMaterial({color:0x111318, roughness:0.15, metalness:0.85});
+  var wingMem = new THREE.MeshStandardMaterial({color:0x090c14, roughness:0.7, metalness:0.05,
+    transparent:true, opacity:0.88, side:THREE.DoubleSide});
+  var wingBone= new THREE.MeshStandardMaterial({color:0x0a0d16, roughness:0.2, metalness:0.85});
+  var plasmaMat= new THREE.MeshStandardMaterial({color:0x00c8e8, emissive:0x00c8e8, emissiveIntensity:2.2, roughness:0});
+  var pupilMat = new THREE.MeshStandardMaterial({color:0x000000, roughness:1});
+  var finNorm  = new THREE.MeshStandardMaterial({color:0x0a0d16, roughness:0.15, metalness:0.9,
+    side:THREE.DoubleSide});
+  var finRed   = new THREE.MeshStandardMaterial({color:0xaa1515, emissive:0x660808, emissiveIntensity:0.6,
+    roughness:0.3, side:THREE.DoubleSide});
+  var hornMat  = new THREE.MeshStandardMaterial({color:0x080c14, roughness:0.2, metalness:0.9});
 
-  function M(geo,mat){ var m=new THREE.Mesh(geo,mat); m.castShadow=true; return m; }
+  // Hiccup materials
+  var hBodyMat = new THREE.MeshStandardMaterial({color:0x1a2840, roughness:0.7, metalness:0.1});
+  var hHelmet  = new THREE.MeshStandardMaterial({color:0x4a6070, roughness:0.3, metalness:0.7});
+  var hSkin    = new THREE.MeshStandardMaterial({color:0xe8c090, roughness:0.8, metalness:0});
+  var hVest    = new THREE.MeshStandardMaterial({color:0x2a1a0a, roughness:0.9, metalness:0});
+  var hBelt    = new THREE.MeshStandardMaterial({color:0x6a4a20, roughness:0.8, metalness:0.1});
 
-  /* ══════════════════════════════
-     BUILD NIGHT FURY
-     ══════════════════════════════ */
-  var dragon = new THREE.Group();
-  scene.add(dragon);
+  function M(geo,mat){var m=new THREE.Mesh(geo,mat);m.castShadow=m.receiveShadow=true;return m;}
 
-  /* -- Body core (elongated capsule-like) -- */
-  var bodyCore = new THREE.Group(); dragon.add(bodyCore);
+  /* ══════════════════════════════════════
+     TOOTHLESS — Night Fury
+     ══════════════════════════════════════ */
+  var toothless = new THREE.Group(); scene.add(toothless);
 
-  // Main torso
-  var torso = M(new THREE.SphereGeometry(1.4,16,12), bodyMat);
-  torso.scale.set(1,0.85,1.7); bodyCore.add(torso);
+  /* -- Torso -- */
+  var torsoGrp = new THREE.Group(); toothless.add(torsoGrp);
+  var torso=M(new THREE.SphereGeometry(1.5,20,14),bodyMat);
+  torso.scale.set(0.95,0.82,1.6); torsoGrp.add(torso);
 
-  // Chest bulge
-  var chest = M(new THREE.SphereGeometry(1.1,12,10), scaleMat);
-  chest.scale.set(0.9,0.8,1.1); chest.position.set(0,-0.2,1.2); bodyCore.add(chest);
+  // Chest
+  var chest=M(new THREE.SphereGeometry(1.1,14,10),scaleMat);
+  chest.scale.set(0.88,0.75,1.0); chest.position.set(0,-0.22,1.35); torsoGrp.add(chest);
 
-  // Belly plates
+  // Belly plates (lighter scales)
+  for(var i=0;i<6;i++){
+    var bp=M(new THREE.SphereGeometry(0.38-i*0.025,8,6),scaleMat);
+    bp.scale.set(1.6,0.28,0.9); bp.position.set(0,-0.9,1.7-i*0.5); torsoGrp.add(bp);
+  }
+  // Back ridge plates
   for(var i=0;i<5;i++){
-    var bp = M(new THREE.SphereGeometry(0.35-i*0.03,8,6), scaleMat);
-    bp.scale.set(1.6,0.3,1); bp.position.set(0,-0.85,1.8-i*0.52); bodyCore.add(bp);
+    var rp=M(new THREE.ConeGeometry(0.06,0.22-i*0.02,5),hornMat);
+    rp.position.set(0,1.1,2-i*0.6); torsoGrp.add(rp);
   }
 
-  // Neck
-  var neck = M(new THREE.CylinderGeometry(0.55,0.85,1.8,12), bodyMat);
-  neck.rotation.x = -0.45; neck.position.set(0,0.4,2.9); bodyCore.add(neck);
-
-  // Tail (tapered segments)
-  var tailSegs = [];
-  for(var i=0;i<8;i++){
-    var tr = 0.7*(1-i/9);
-    var ts = M(new THREE.SphereGeometry(tr,10,8), bodyMat);
-    ts.scale.set(0.9,0.75,1.1);
-    tailSegs.push(ts); bodyCore.add(ts);
-  }
+  /* -- Neck -- */
+  var neck=M(new THREE.CylinderGeometry(0.52,0.9,1.9,12),bodyMat);
+  neck.rotation.x=-0.42; neck.position.set(0,0.38,3.0); torsoGrp.add(neck);
 
   /* -- HEAD -- */
-  var head = new THREE.Group(); dragon.add(head);
+  var headGrp=new THREE.Group(); toothless.add(headGrp);
 
-  var skull = M(new THREE.SphereGeometry(0.95,16,12), bodyMat);
-  skull.scale.set(1.1,0.85,1.35); head.add(skull);
+  var skull=M(new THREE.SphereGeometry(0.92,18,14),bodyMat);
+  skull.scale.set(1.1,0.88,1.32); headGrp.add(skull);
 
-  // Snout (wider/flatter like Night Fury)
-  var snout = M(new THREE.CylinderGeometry(0.32,0.55,1.0,10), bodyMat);
-  snout.rotation.x = -Math.PI/2; snout.position.set(0,-0.08,1.18); head.add(snout);
-
-  // Snout tip
-  var tip = M(new THREE.SphereGeometry(0.32,10,8), bodyMat);
-  tip.scale.set(1.2,0.7,1); tip.position.set(0,-0.08,1.68); head.add(tip);
+  // Snout (wider flat Night Fury snout)
+  var snout=M(new THREE.SphereGeometry(0.58,12,10),bodyMat);
+  snout.scale.set(0.85,0.5,1.2); snout.position.set(0,-0.06,1.08); headGrp.add(snout);
+  var snoutTip=M(new THREE.SphereGeometry(0.38,10,8),scaleMat);
+  snoutTip.scale.set(1.15,0.55,0.9); snoutTip.position.set(0,-0.06,1.58); headGrp.add(snoutTip);
 
   // Nostril glow
-  [-0.18,0.18].forEach(function(x){
-    var n = M(new THREE.SphereGeometry(0.08,8,6),
-      new THREE.MeshStandardMaterial({color:0x00ffd4,emissive:0x00ffd4,emissiveIntensity:0.8}));
-    n.position.set(x,0,1.6); head.add(n);
+  [-0.2,0.2].forEach(function(x){
+    var n=M(new THREE.SphereGeometry(0.09,8,6),plasmaMat);
+    n.scale.set(1,0.6,1); n.position.set(x,-0.02,1.68); headGrp.add(n);
   });
 
-  // EYES (iconic Night Fury cat eyes)
-  [-0.52,0.52].forEach(function(x){
-    var eye = M(new THREE.SphereGeometry(0.2,12,10), eyeMat);
-    eye.position.set(x,0.22,0.68); head.add(eye);
-    var pupil = M(new THREE.SphereGeometry(0.14,8,6), pupilMat);
-    pupil.scale.x = 0.22; // slit pupil
-    pupil.position.set(x,0.22,0.76); head.add(pupil);
-    // Eye reflection
-    var ref = M(new THREE.SphereGeometry(0.06,6,4),
+  // ---- EYES (iconic Night Fury cat slit pupils) ----
+  [-0.5,0.5].forEach(function(x){
+    // Outer glow ring
+    var eyeRing=M(new THREE.TorusGeometry(0.22,0.05,8,24),plasmaMat);
+    eyeRing.position.set(x,0.22,0.72); eyeRing.rotation.y=Math.PI/2; headGrp.add(eyeRing);
+    // White/teal iris
+    var iris=M(new THREE.SphereGeometry(0.21,14,12),plasmaMat);
+    iris.position.set(x,0.22,0.76); headGrp.add(iris);
+    // Black slit pupil
+    var pupil=M(new THREE.SphereGeometry(0.16,10,8),pupilMat);
+    pupil.scale.set(0.18,1,1); pupil.position.set(x,0.22,0.84); headGrp.add(pupil);
+    // Specular
+    var spec=M(new THREE.SphereGeometry(0.06,6,4),
       new THREE.MeshBasicMaterial({color:0xffffff}));
-    ref.position.set(x+0.06,0.3,0.8); head.add(ref);
+    spec.position.set(x+0.08,0.3,0.84); headGrp.add(spec);
   });
 
-  // Head fins / ears (Night Fury's distinctive head fins)
-  [-1,1].forEach(function(side){
-    for(var f=0;f<2;f++){
-      var fsh = new THREE.Shape();
-      fsh.moveTo(0,0);
-      fsh.bezierCurveTo(0.1,0.6, 0.05,1.2, 0,1.5);
-      fsh.bezierCurveTo(-0.15,1.0, -0.2,0.4, 0,0);
-      var fin = M(new THREE.ExtrudeGeometry(fsh,{depth:0.03,bevelEnabled:false}), finMat);
-      fin.rotation.y = side*(0.5+f*0.25);
-      fin.rotation.z = side*0.1;
-      fin.position.set(side*(0.7+f*0.15), 0.5, -0.2+f*0.3);
-      head.add(fin);
-    }
+  // Head fins (Night Fury has 4 ear-like fins)
+  [[-1,0],[-1,1],[1,0],[1,1]].forEach(function(sf){
+    var s=sf[0],f=sf[1];
+    var sh=new THREE.Shape();
+    sh.moveTo(0,0);
+    sh.bezierCurveTo(s*0.1,0.7,s*0.05,1.3,s*0.02,1.6);
+    sh.bezierCurveTo(s*-0.2,1.1,s*-0.22,0.5,s*-0.02,0);
+    sh.closePath();
+    var fin=M(new THREE.ExtrudeGeometry(sh,{depth:0.03,bevelEnabled:false}),finNorm);
+    fin.rotation.y=s*(0.6+f*0.28);
+    fin.rotation.z=s*0.08;
+    fin.position.set(s*(0.72+f*0.12),0.52,-0.15+f*0.28);
+    headGrp.add(fin);
   });
 
   // Horns
-  [-0.45,0.45].forEach(function(x){
-    var h = M(new THREE.ConeGeometry(0.1,1.0,6), hornMat);
-    h.position.set(x,0.85,-0.1);
-    h.rotation.set(-0.3, x>0?0.3:-0.3, x>0?0.25:-0.25);
-    head.add(h);
+  [-0.46,0.46].forEach(function(x){
+    var h=M(new THREE.ConeGeometry(0.1,0.95,6),hornMat);
+    h.position.set(x,0.9,-0.12);
+    h.rotation.set(-0.3,x>0?0.3:-0.3,x>0?0.22:-0.22);
+    headGrp.add(h);
   });
 
-  /* -- TAIL FIN (Night Fury signature: one fin, not two) -- */
-  var tailFinGroup = new THREE.Group(); dragon.add(tailFinGroup);
-
-  function makeTailFin(side){
-    var tfs = new THREE.Shape();
-    tfs.moveTo(0,0);
-    tfs.bezierCurveTo(0.5*side,0.3, 1.2*side,0.8, 1.5*side,0.3);
-    tfs.bezierCurveTo(1.8*side,0, 1.4*side,-0.5, 0.8*side,-0.8);
-    tfs.bezierCurveTo(0.3*side,-0.5, 0,-0.2, 0,0);
-    var tfm = M(new THREE.ExtrudeGeometry(tfs,{depth:0.04,bevelEnabled:false}), finMat);
-    return tfm;
+  /* -- TAIL -- */
+  var tailSegs=[];
+  for(var i=0;i<10;i++){
+    var r=0.68*(1-i/11);
+    var ts=M(new THREE.SphereGeometry(r,10,8),bodyMat);
+    ts.scale.set(0.88,0.72,1.05); tailSegs.push(ts); toothless.add(ts);
+    // Add ridge spines on tail
+    if(i%2===0&&i<8){
+      var tsp=M(new THREE.ConeGeometry(0.06,0.25-i*0.02,5),hornMat);
+      tsp.position.y=0.45; ts.add(tsp);
+    }
   }
-  var tf1 = makeTailFin(1);  tailFinGroup.add(tf1);
-  var tf2 = makeTailFin(-1); tailFinGroup.add(tf2);
 
-  // Tail spine plates
-  for(var i=0;i<6;i++){
-    var sp = M(new THREE.ConeGeometry(0.08,0.4-i*0.04,5), hornMat);
-    sp.position.set(0, 0.3, 0);
-    tailFinGroup.add(sp);
+  /* -- TAIL FINS (signature Night Fury double fin + red prosthetic) -- */
+  var tailFinGrp=new THREE.Group(); toothless.add(tailFinGrp);
+  function makeTailFin(side, isRed){
+    var sh=new THREE.Shape();
+    sh.moveTo(0,0);
+    sh.bezierCurveTo(0.6*side,0.35, 1.5*side,0.9, 1.8*side,0.35);
+    sh.bezierCurveTo(2.2*side,0, 1.8*side,-0.8, 1.1*side,-1.1);
+    sh.bezierCurveTo(0.6*side,-0.8, 0.1*side,-0.4, 0,0);
+    var fin=M(new THREE.ExtrudeGeometry(sh,{depth:0.05,bevelEnabled:false}),isRed?finRed:finNorm);
+    return fin;
   }
+  // Left fin (normal black)
+  tailFinGrp.add(makeTailFin(-1, false));
+  // Right fin (RED prosthetic — Toothless's disability)
+  var redFin=makeTailFin(1, true);
+  tailFinGrp.add(redFin);
+  // Hinge connector
+  var hinge=M(new THREE.CylinderGeometry(0.14,0.14,0.3,12),
+    new THREE.MeshStandardMaterial({color:0x444444,roughness:0.2,metalness:0.9}));
+  hinge.rotation.z=Math.PI/2; tailFinGrp.add(hinge);
 
   /* -- WINGS -- */
-  var leftWingGrp  = new THREE.Group(); dragon.add(leftWingGrp);
-  var rightWingGrp = new THREE.Group(); dragon.add(rightWingGrp);
+  var leftWingGrp=new THREE.Group(); toothless.add(leftWingGrp);
+  var rightWingGrp=new THREE.Group(); toothless.add(rightWingGrp);
 
   function makeWing(side){
-    var wg = new THREE.Group();
-    // Main membrane
-    var wShape = new THREE.Shape();
-    wShape.moveTo(0,0);
-    wShape.bezierCurveTo(1.5*side,0.6, 3.8*side,1.8, 5.2*side,0.5);
-    wShape.bezierCurveTo(6.0*side,-0.2, 5.8*side,-2.2, 4.2*side,-3.0);
-    wShape.bezierCurveTo(3.0*side,-3.5, 1.5*side,-2.2, 0.8*side,-1.2);
-    wShape.bezierCurveTo(0.3*side,-0.6, 0,-0.2, 0,0);
-    var wing = M(new THREE.ExtrudeGeometry(wShape,{depth:0.05,bevelEnabled:false}), wingMat);
+    var wg=new THREE.Group();
+    var sh=new THREE.Shape();
+    sh.moveTo(0,0);
+    sh.bezierCurveTo(1.5*side,0.7, 4.0*side,2.0, 5.8*side,0.7);
+    sh.bezierCurveTo(6.8*side,-0.1, 6.5*side,-2.8, 4.8*side,-3.6);
+    sh.bezierCurveTo(3.5*side,-4.0, 2.0*side,-2.8, 1.2*side,-1.8);
+    sh.bezierCurveTo(0.5*side,-1.0, 0.1*side,-0.4, 0,0);
+    var wing=M(new THREE.ExtrudeGeometry(sh,{depth:0.06,bevelEnabled:false}),wingMem);
     wg.add(wing);
-
-    // Wing bone structure
-    var boneEnds = [[5.2*side,0.5],[5.8*side,-2.2],[4.2*side,-3.0]];
-    boneEnds.forEach(function(be){
-      var boneLen = Math.sqrt(be[0]*be[0]+be[1]*be[1]);
-      var bone = M(new THREE.CylinderGeometry(0.06,0.03,boneLen,8), hornMat);
-      bone.rotation.z = Math.atan2(be[0], -be[1]) - Math.PI/2;
-      bone.position.set(be[0]/2,be[1]/2,0.03);
-      wg.add(bone);
+    // Wing bones (3 finger spars)
+    [[5.8*side,0.7],[6.5*side,-2.8],[4.8*side,-3.6]].forEach(function(be){
+      var bl=Math.sqrt(be[0]*be[0]+be[1]*be[1]);
+      var b=M(new THREE.CylinderGeometry(0.07,0.04,bl,8),wingBone);
+      b.rotation.z=Math.atan2(be[0],-be[1])-Math.PI/2;
+      b.position.set(be[0]/2,be[1]/2,0.04);
+      wg.add(b);
     });
-
-    // Shoulder bone
-    var shoulderBone = M(new THREE.CylinderGeometry(0.12,0.08,1.8,8), bodyMat);
-    shoulderBone.rotation.z = side>0?-0.5:0.5;
-    shoulderBone.position.set(side*0.9,-0.2,0);
-    wg.add(shoulderBone);
-
+    // Shoulder spar
+    var sh2=M(new THREE.CylinderGeometry(0.14,0.09,2.0,8),wingBone);
+    sh2.rotation.z=side>0?-0.4:0.4; sh2.position.set(side*1.0,-0.3,0); wg.add(sh2);
     return wg;
   }
-  leftWingGrp.add(makeWing(-1));  leftWingGrp.position.set(-0.6,0.5,0);
-  rightWingGrp.add(makeWing(1));  rightWingGrp.position.set(0.6,0.5,0);
+  leftWingGrp.add(makeWing(-1));  leftWingGrp.position.set(-0.7,0.6,0);
+  rightWingGrp.add(makeWing(1));  rightWingGrp.position.set(0.7,0.6,0);
 
   /* -- LEGS -- */
-  function makeLeg(side,front){
-    var lg = new THREE.Group();
-    var upper=M(new THREE.CylinderGeometry(0.18,0.13,1.0,8),bodyMat);
-    upper.position.y=-0.5; lg.add(upper);
-    var lower=M(new THREE.CylinderGeometry(0.13,0.08,0.9,8),bodyMat);
-    lower.position.y=-0.45; upper.add(lower);
-    // Foot
-    var foot=M(new THREE.BoxGeometry(0.25,0.12,0.5),bodyMat);
-    foot.position.set(0,-0.5,0.1); lower.add(foot);
-    // Claws
-    [-0.08,0,0.08].forEach(function(cx){
-      var claw=M(new THREE.ConeGeometry(0.04,0.25,5),hornMat);
-      claw.rotation.x=0.5; claw.position.set(cx,-0.06,0.3);
-      foot.add(claw);
+  function makeLeg(s,front){
+    var g=new THREE.Group();
+    var up=M(new THREE.CylinderGeometry(0.19,0.14,1.1,8),bodyMat); up.position.y=-0.55; g.add(up);
+    var lo=M(new THREE.CylinderGeometry(0.14,0.09,1.0,8),bodyMat); lo.position.y=-0.5; up.add(lo);
+    var foot=M(new THREE.BoxGeometry(0.28,0.14,0.6),bodyMat); foot.position.set(0,-0.6,0.12); lo.add(foot);
+    [-0.1,0,0.1].forEach(function(cx){
+      var c=M(new THREE.ConeGeometry(0.045,0.28,5),hornMat);
+      c.rotation.x=0.45; c.position.set(cx,-0.07,0.36); foot.add(c);
     });
-    lg.position.set(side*0.9,-0.8,front?1.2:-1.0);
-    lg.rotation.z=side*0.25;
-    return lg;
+    g.position.set(s*0.95,-0.85,front?1.3:-1.1); g.rotation.z=s*0.22; return g;
   }
-  [-1,1].forEach(function(s){ dragon.add(makeLeg(s,true)); dragon.add(makeLeg(s,false)); });
+  [-1,1].forEach(function(s){toothless.add(makeLeg(s,true));toothless.add(makeLeg(s,false));});
 
-  /* ── Back spines ── */
-  for(var i=0;i<8;i++){
-    var sh=0.22+0.12*Math.sin((i/8)*Math.PI);
-    var sp=M(new THREE.ConeGeometry(0.055,sh,5),hornMat);
-    sp.position.set(0,1.1,-2.5+i*0.7);
-    bodyCore.add(sp);
-  }
+  /* ══════════════════════════════════════
+     HICCUP — sitting on Toothless's back
+     ══════════════════════════════════════ */
+  var hiccup=new THREE.Group(); toothless.add(hiccup);
+  hiccup.position.set(0,1.85,0.8); // sitting on back
 
-  /* ── PLASMA PARTICLES ── */
-  var PLASMA=60;
-  var plasmaGeo=new THREE.BufferGeometry();
-  var plasmaPos=new Float32Array(PLASMA*3);
-  var plasmaAges=new Float32Array(PLASMA);
-  var plasmaVels=[];
-  for(var i=0;i<PLASMA;i++){
-    plasmaAges[i]=0;
-    plasmaVels.push(new THREE.Vector3(
-      (Math.random()-.5)*0.5,
-      (Math.random()-.5)*0.4,
-      0.8+Math.random()*0.8
-    ));
-  }
-  plasmaGeo.setAttribute('position',new THREE.BufferAttribute(plasmaPos,3));
-  var plasmaMat=new THREE.PointsMaterial({
-    color:0x00ffd4,size:0.4,transparent:true,opacity:.8,
-    blending:THREE.AdditiveBlending,depthWrite:false
+  // Body/torso
+  var hBody=M(new THREE.CylinderGeometry(0.28,0.32,0.85,10),hBodyMat);
+  hBody.position.y=0.42; hiccup.add(hBody);
+  // Vest
+  var hVestM=M(new THREE.CylinderGeometry(0.3,0.34,0.5,10),hVest);
+  hVestM.position.y=0.55; hiccup.add(hVestM);
+  // Belt
+  var hBeltM=M(new THREE.TorusGeometry(0.31,0.05,8,16),hBelt);
+  hBeltM.rotation.x=Math.PI/2; hBeltM.position.y=0.35; hiccup.add(hBeltM);
+  // Neck
+  var hNeck=M(new THREE.CylinderGeometry(0.14,0.18,0.28,8),hSkin);
+  hNeck.position.y=0.98; hiccup.add(hNeck);
+  // Head
+  var hHead=M(new THREE.SphereGeometry(0.26,12,10),hSkin);
+  hHead.scale.set(1,1.1,1.05); hHead.position.y=1.28; hiccup.add(hHead);
+  // Helmet
+  var hHelm=M(new THREE.SphereGeometry(0.28,10,8),hHelmet);
+  hHelm.scale.set(1.05,0.7,1.05); hHelm.position.set(0,1.42,-0.02); hiccup.add(hHelm);
+  // Helmet horn (small Viking horn)
+  var helmHorn=M(new THREE.ConeGeometry(0.05,0.22,6),hHelmet);
+  helmHorn.position.set(0.14,1.54,0.04); helmHorn.rotation.z=-0.3; hiccup.add(helmHorn);
+  // Arms gripping Toothless
+  [-0.36,0.36].forEach(function(x){
+    var arm=M(new THREE.CylinderGeometry(0.09,0.08,0.65,8),hBodyMat);
+    arm.rotation.z=x>0?0.9:-0.9; arm.position.set(x*1.2,0.62,0.1); hiccup.add(arm);
+    var hand=M(new THREE.SphereGeometry(0.1,8,6),hSkin); hand.position.set(x*1.85,0.28,0.35); hiccup.add(hand);
   });
-  var plasmaParticles=new THREE.Points(plasmaGeo,plasmaMat);
-  plasmaParticles.visible=false;
-  scene.add(plasmaParticles);
+  // Legs straddling dragon
+  [-0.42,0.42].forEach(function(x){
+    var leg=M(new THREE.CylinderGeometry(0.1,0.1,0.7,8),hBodyMat);
+    leg.rotation.z=x>0?1.1:-1.1; leg.position.set(x*0.9,0.0,0); hiccup.add(leg);
+    var boot=M(new THREE.SphereGeometry(0.12,8,6),
+      new THREE.MeshStandardMaterial({color:0x1a1008,roughness:0.9}));
+    boot.scale.set(1,0.8,1.3); boot.position.set(x*1.4,-0.28,0.2); hiccup.add(boot);
+  });
+
+  /* ── PLASMA particles ── */
+  var PLC=80;
+  var plGeo=new THREE.BufferGeometry();
+  var plPos=new Float32Array(PLC*3),plAges=new Float32Array(PLC);
+  var plVels=[];
+  for(var i=0;i<PLC;i++){plAges[i]=0;plVels.push(new THREE.Vector3((Math.random()-.5)*0.5,(Math.random()-.5)*0.4,0.9+Math.random()));}
+  plGeo.setAttribute('position',new THREE.BufferAttribute(plPos,3));
+  var plMat=new THREE.PointsMaterial({color:0x00c8e8,size:0.45,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false});
+  var plPart=new THREE.Points(plGeo,plMat); plPart.visible=false; scene.add(plPart);
   var firing=false;
 
   /* ── Mouse / drag ── */
-  var mouseX=0,mouseY=0;
-  var isDrag=false,dragSX=0,dragRY=0;
-  var mDownT=0;
+  var mx=0,my=0,isDrag=false,dragSX=0,dragBaseY=0,mDownT=0;
 
-  canvas.addEventListener('mousedown',function(e){
-    isDrag=false; mDownT=Date.now();
-    dragSX=e.clientX; dragRY=dragon.rotation.y;
-    canvas.style.cursor='grabbing';
-  });
-  window.addEventListener('mouseup',function(){
-    canvas.style.cursor='grab';
-  });
+  canvas.addEventListener('mousedown',function(e){isDrag=false;mDownT=Date.now();dragSX=e.clientX;dragBaseY=toothless.rotation.y;canvas.style.cursor='grabbing';});
+  window.addEventListener('mouseup',function(){canvas.style.cursor='grab';});
   canvas.addEventListener('mousemove',function(e){
-    mouseX=(e.clientX/window.innerWidth-.5)*2;
-    mouseY=(e.clientY/window.innerHeight-.5)*2;
-    if(e.buttons===1){
-      isDrag=true;
-      dragon.rotation.y = dragRY+(e.clientX-dragSX)*0.01;
-    }
+    mx=(e.clientX/window.innerWidth-.5)*2;
+    my=(e.clientY/window.innerHeight-.5)*2;
+    if(e.buttons===1){isDrag=true;toothless.rotation.y=dragBaseY+(e.clientX-dragSX)*0.01;}
   });
   canvas.addEventListener('click',function(){
-    if(Date.now()-mDownT<200 && !isDrag){ firing=true; setTimeout(function(){firing=false;},1400); }
+    if(Date.now()-mDownT<200&&!isDrag){firing=true;setTimeout(function(){firing=false;},1600);}
   });
   canvas.style.cursor='grab';
 
+  /* ── Scroll: dragon follows page scroll ── */
+  var scrollTarget=0, scrollCurrent=0;
+  window.addEventListener('scroll',function(){
+    scrollTarget = window.scrollY;
+  });
+
   /* ── Resize ── */
   function resize(){
-    var w=section.clientWidth, h=section.clientHeight;
+    var w=heroEl.clientWidth,h=heroEl.clientHeight;
+    if(!w||!h) return;
     renderer.setSize(w,h,false);
     camera.aspect=w/h; camera.updateProjectionMatrix();
   }
-  new ResizeObserver(resize).observe(section);
-  resize();
+  new ResizeObserver(resize).observe(heroEl); resize();
 
-  /* ════════════════════════════════════
+  /* ════════════════════════════════
      ANIMATION LOOP
-     ════════════════════════════════════ */
+     ════════════════════════════════ */
   var t=0;
   function animate(){
     requestAnimationFrame(animate);
     t+=0.016;
 
-    /* Dragon flight path */
-    var flyX=Math.sin(t*0.35)*9;
-    var flyY=Math.sin(t*0.55)*2.5+1.5;
-    var flyZ=Math.cos(t*0.35)*4;
-    dragon.position.set(flyX,flyY,flyZ);
+    // Smooth scroll interpolation
+    scrollCurrent += (scrollTarget - scrollCurrent)*0.06;
 
-    /* Body banking / yaw */
-    var yaw=Math.atan2(
-      Math.cos(t*0.35)*0.35*9,
-      -Math.sin(t*0.35)*0.35*4
-    );
-    dragon.rotation.y = yaw + (isDrag? (dragon.rotation.y-yaw)*0 : 0);
-    dragon.rotation.z = Math.sin(t*0.35)*0.18;
+    // Dragon flight path (figure-8)
+    var flyX=Math.sin(t*0.38)*8;
+    var flyY=Math.sin(t*0.52)*2.2 + 1.2 - scrollCurrent*0.006;
+    var flyZ=Math.cos(t*0.38)*3.5;
+    toothless.position.set(flyX,flyY,flyZ);
 
-    /* Camera drift follows mouse */
-    camera.position.x += (mouseX*5-2 - camera.position.x)*0.025;
-    camera.position.y += (-mouseY*3+4 - camera.position.y)*0.025;
-    camera.lookAt(dragon.position.x*0.3, dragon.position.y*0.4, 0);
+    // Yaw to face direction of travel
+    toothless.rotation.y = Math.atan2(Math.cos(t*0.38)*0.38*8, -Math.sin(t*0.38)*0.38*3.5) + Math.PI;
+    toothless.rotation.z = Math.sin(t*0.38)*0.14;
 
-    /* Tail segments undulate */
+    // Camera follows mouse gently
+    camera.position.x += (mx*4-4 - camera.position.x)*0.022;
+    camera.position.y += (-my*2.5+3 - camera.position.y)*0.022;
+    camera.lookAt(flyX*0.22, flyY*0.3, 0);
+
+    // Tail segments undulate
     tailSegs.forEach(function(seg,i){
-      var pct=i/8;
       seg.position.set(
-        Math.sin(t*0.8+i*0.45)*0.5,
-        Math.sin(t*1.1+i*0.5)*0.2,
-        -2.8-i*1.0
+        Math.sin(t*0.85+i*0.42)*0.45*((i+1)/10),
+        Math.sin(t*1.0+i*0.5)*0.18,
+        -2.8-i*0.95
       );
+      seg.rotation.y = Math.sin(t*0.85+i*0.42)*0.12;
     });
 
-    /* Tail fin */
-    tailFinGroup.position.copy(tailSegs[tailSegs.length-1].position);
-    tailFinGroup.rotation.y = dragon.rotation.y+Math.PI;
-    tailFinGroup.rotation.z = Math.sin(t*0.8)*0.2;
+    // Tail fin follows last tail segment
+    tailFinGrp.position.copy(tailSegs[tailSegs.length-1].position);
+    tailFinGrp.rotation.y = toothless.rotation.y+Math.PI;
+    tailFinGrp.rotation.x = Math.sin(t*0.55)*0.18;
+    // Red fin flaps independently (prosthetic control via Hiccup's foot pedal)
+    redFin.rotation.z = Math.sin(t*1.2)*0.3;
 
-    /* Head bobbing */
-    head.position.set(0, 0.5+Math.sin(t*0.6)*0.08, 4.2);
-    head.rotation.x = -0.12+Math.sin(t*0.5)*0.06;
+    // Head position and gentle bob
+    headGrp.position.set(0, 0.42+Math.sin(t*0.55)*0.08, 4.3);
+    headGrp.rotation.x = -0.1 + Math.sin(t*0.45)*0.07;
+    headGrp.rotation.y = toothless.rotation.y + Math.sin(t*0.4)*0.06;
 
-    /* Wing flapping */
-    var flap=0.6+Math.abs(Math.sin(t*2.2))*0.45;
-    leftWingGrp.rotation.z  =  flap+Math.sin(t*2.2)*0.25;
-    rightWingGrp.rotation.z = -flap-Math.sin(t*2.2)*0.25;
-    leftWingGrp.rotation.x  =  Math.sin(t*1.5)*0.08;
-    rightWingGrp.rotation.x = -Math.sin(t*1.5)*0.08;
+    // Wing flap (graceful, not cartoonish)
+    var flap = 0.55 + Math.sin(t*2.1)*0.42;
+    leftWingGrp.rotation.z   =  flap + Math.sin(t*2.1)*0.2;
+    rightWingGrp.rotation.z  = -flap - Math.sin(t*2.1)*0.2;
+    leftWingGrp.rotation.x   = Math.sin(t*1.4)*0.07;
+    rightWingGrp.rotation.x  = Math.sin(t*1.4)*0.07;
 
-    /* Eye glow pulse */
-    var ep=1.5+Math.sin(t*3.5)*0.6;
-    eyeMat.emissiveIntensity=ep;
+    // Hiccup rides with dragon
+    hiccup.rotation.z = Math.sin(t*0.52)*0.06;
+    hiccup.children.forEach(function(c,i){
+      if(c.isMesh) c.rotation.x = Math.sin(t*0.9+i*0.1)*0.03;
+    });
 
-    /* Plasma light flicker */
-    plasmaLight.position.copy(dragon.position);
-    plasmaLight.intensity = firing? (2+Math.random()*2) : (0.4+Math.sin(t*2)*0.2);
-    if(firing) plasmaLight.color.setHSL(0.47+Math.random()*0.06,1,0.6);
-    else       plasmaLight.color.set(0x00ffd4);
+    // Eye glow pulse
+    plasmaMat.emissiveIntensity = 1.8 + Math.sin(t*3.5)*0.6;
 
-    /* Plasma particles */
-    var headWorldPos=new THREE.Vector3();
-    head.getWorldPosition(headWorldPos);
-    var fwd=new THREE.Vector3(0,0,1)
-      .applyEuler(new THREE.Euler(head.rotation.x,dragon.rotation.y,dragon.rotation.z,'XYZ'));
+    // Plasma glow light
+    plasmaGlow.position.copy(toothless.position).add(headGrp.position.clone().applyEuler(new THREE.Euler(0,toothless.rotation.y,0)));
+    plasmaGlow.intensity = firing ? (2.5+Math.random()*2) : (0.5+Math.sin(t*2)*0.25);
+    if(firing){plasmaGlow.color.set(0x40ffff);redGlow.intensity=1.5;}
+    else{plasmaGlow.color.set(0x00c8e8);redGlow.intensity=0.4+Math.sin(t*1.5)*0.2;}
 
-    for(var i=0;i<PLASMA;i++){
-      if(!firing){ plasmaAges[i]=0; continue; }
-      plasmaAges[i]+=0.028;
-      if(plasmaAges[i]>1) plasmaAges[i]=Math.random()*0.1;
-      var a=plasmaAges[i];
-      plasmaPos[i*3]  =headWorldPos.x+fwd.x*a*5+plasmaVels[i].x*a;
-      plasmaPos[i*3+1]=headWorldPos.y+fwd.y*a*5+plasmaVels[i].y*a;
-      plasmaPos[i*3+2]=headWorldPos.z+fwd.z*a*5+plasmaVels[i].z*a;
+    // Plasma particles
+    var hw=new THREE.Vector3(); headGrp.getWorldPosition(hw);
+    var fwd=new THREE.Vector3(0,0,1).applyEuler(new THREE.Euler(headGrp.rotation.x,toothless.rotation.y,0,'XYZ'));
+    for(var i=0;i<PLC;i++){
+      if(!firing){plAges[i]=0;continue;}
+      plAges[i]+=0.03; if(plAges[i]>1)plAges[i]=Math.random()*0.08;
+      var a=plAges[i];
+      plPos[i*3]  =hw.x+fwd.x*a*6+plVels[i].x*a;
+      plPos[i*3+1]=hw.y+fwd.y*a*6+plVels[i].y*a;
+      plPos[i*3+2]=hw.z+fwd.z*a*6+plVels[i].z*a;
     }
-    plasmaGeo.attributes.position.needsUpdate=true;
-    plasmaParticles.visible=firing;
-
-    /* Aurora drift */
-    auroras.forEach(function(a,i){ a.material.opacity=0.05+Math.sin(t*0.3+i)*0.04; });
+    plGeo.attributes.position.needsUpdate=true;
+    plPart.visible=firing;
 
     renderer.render(scene,camera);
   }

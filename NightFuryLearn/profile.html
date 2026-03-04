@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NightFury Learn · Profile</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.prof-grid { padding:32px; display:grid; grid-template-columns:300px 1fr; gap:20px; max-width:1000px; margin:0 auto; }
+
+.prof-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius-lg); overflow:hidden;
+}
+.pc-avatar-wrap {
+  height:220px; background:linear-gradient(180deg,#0a1828,#060810);
+  position:relative; display:flex; align-items:center; justify-content:center;
+}
+.pc-avatar-wrap img {
+  height:100%; width:100%; object-fit:cover; object-position:top;
+  position:absolute; inset:0;
+}
+.pc-avatar-overlay {
+  position:absolute; bottom:0; left:0; right:0;
+  background:linear-gradient(transparent,rgba(6,8,16,.9));
+  height:80px;
+}
+.pc-avatar-fallback { font-size:90px; position:relative; z-index:2; }
+.pc-info { padding:20px 22px; }
+.pc-name-lbl { font-family:var(--font-mono); font-size:9px; color:var(--text3); letter-spacing:.18em; margin-bottom:6px; }
+.pc-name-big { font-family:var(--font-display); font-size:28px; letter-spacing:.06em; }
+.pc-class    { font-family:var(--font-mono); font-size:10px; margin-top:4px; letter-spacing:.08em; }
+.pc-stats    { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; }
+.pcs { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center; }
+.pcs-val { font-family:var(--font-display); font-size:24px; color:var(--plasma); }
+.pcs-lbl { font-family:var(--font-mono); font-size:8px; color:var(--text3); letter-spacing:.1em; margin-top:2px; }
+
+/* Settings form */
+.settings-col { display:flex; flex-direction:column; gap:16px; }
+.settings-section {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:22px 26px;
+}
+.ss-title {
+  font-family:var(--font-display); font-size:20px; letter-spacing:.06em;
+  margin-bottom:18px; padding-bottom:10px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.form-row { margin-bottom:16px; }
+.form-lbl { font-family:var(--font-mono); font-size:10px; letter-spacing:.15em;
+             color:var(--text3); text-transform:uppercase; margin-bottom:6px; display:block; }
+.form-inp {
+  width:100%; padding:10px 14px;
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius); color:var(--text);
+  font-family:var(--font-ui); font-size:15px; font-weight:600; outline:none;
+  transition:border-color .2s;
+}
+.form-inp:focus { border-color:var(--plasma); }
+.form-inp::placeholder { color:var(--text3); }
+
+/* Gender selector */
+.gender-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.gender-opt {
+  border:2px solid var(--border); border-radius:10px; padding:16px;
+  cursor:pointer; transition:all .2s; text-align:center;
+  background:var(--panel2);
+}
+.gender-opt:hover { border-color:var(--border2); }
+.gender-opt.sel-m { border-color:var(--plasma); background:rgba(0,200,232,.07); }
+.gender-opt.sel-f { border-color:var(--fire2); background:rgba(224,85,32,.07); }
+.go-img { height:100px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; overflow:hidden; border-radius:8px; }
+.go-img img { height:100%; width:100%; object-fit:cover; object-position:top; }
+.go-img-fallback { font-size:52px; }
+.go-name { font-family:var(--font-display); font-size:18px; letter-spacing:.05em; }
+.go-desc { font-family:var(--font-mono); font-size:9px; color:var(--text3); margin-top:3px; letter-spacing:.08em; }
+
+/* API key input */
+.api-notice {
+  background:rgba(0,200,232,.04); border:1px solid rgba(0,200,232,.15);
+  border-radius:8px; padding:12px 14px; margin-bottom:12px;
+  font-family:var(--font-mono); font-size:10px; color:var(--text2); line-height:1.8;
+}
+.api-notice a { color:var(--plasma); }
+.api-key-wrap { display:flex; gap:8px; }
+.api-key-wrap .form-inp { font-family:var(--font-mono); font-size:12px; letter-spacing:.05em; }
+.show-btn {
+  padding:0 14px; background:var(--panel2); border:1px solid var(--border);
+  border-radius:var(--radius); color:var(--text2); cursor:pointer; white-space:nowrap;
+  font-family:var(--font-mono); font-size:10px; transition:all .18s;
+}
+.show-btn:hover { border-color:var(--border2); color:var(--text); }
+
+.save-btn {
+  width:100%; padding:13px; background:var(--plasma); color:#060810;
+  border:none; border-radius:var(--radius); font-family:var(--font-ui);
+  font-weight:700; font-size:15px; letter-spacing:.08em; cursor:pointer;
+  transition:all .2s; margin-top:8px;
+}
+.save-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
+
+.saved-msg {
+  text-align:center; font-family:var(--font-mono); font-size:11px;
+  color:var(--green); letter-spacing:.1em; padding:8px; opacity:0; transition:opacity .3s;
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo">NIGHT<span>FURY</span></div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="courses.html">Courses</a>
+    <a href="viewer.html">3D Library</a>
+    <a href="designer.html">Designer</a>
+    <a href="profile.html" class="active">Profile</a>
+  </div>
+  <div class="nav-right"><span class="nav-badge">SETTINGS</span></div>
+</nav>
+
+<div class="page">
+<div class="prof-grid">
+
+  <!-- ── Profile Card ── -->
+  <div>
+    <div class="prof-card">
+      <div class="pc-avatar-wrap" id="pc-av-wrap">
+        <img id="pc-av-img" src="" alt="" style="display:none">
+        <div class="pc-avatar-overlay"></div>
+        <div class="pc-avatar-fallback" id="pc-av-emoji">⚔️</div>
+      </div>
+      <div class="pc-info">
+        <div class="pc-name-lbl">RIDER NAME</div>
+        <div class="pc-name-big" id="pc-name-big">Dragon Rider</div>
+        <div class="pc-class" id="pc-class-txt" style="color:var(--plasma)">◆ LOADING...</div>
+        <div class="pc-stats">
+          <div class="pcs"><div class="pcs-val" id="pcs-done">0</div><div class="pcs-lbl">LESSONS DONE</div></div>
+          <div class="pcs"><div class="pcs-val" id="pcs-streak" style="color:var(--fire2)">0</div><div class="pcs-lbl">DAY STREAK</div></div>
+          <div class="pcs"><div class="pcs-val" id="pcs-pct" style="color:var(--gold)">0%</div><div class="pcs-lbl">PROGRESS</div></div>
+          <div class="pcs"><div class="pcs-val" id="pcs-sessions" style="color:var(--green)">0</div><div class="pcs-lbl">FOCUS SESSIONS</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings ── -->
+  <div class="settings-col">
+
+    <!-- Identity -->
+    <div class="settings-section">
+      <div class="ss-title">⚔️ Rider Identity</div>
+
+      <div class="form-row">
+        <label class="form-lbl">Your Name</label>
+        <input class="form-inp" id="inp-name" placeholder="Enter your name..." maxlength="40">
+      </div>
+
+      <div class="form-row">
+        <label class="form-lbl">Pronouns / Guide Character</label>
+        <div class="gender-row">
+          <div class="gender-opt" id="opt-male" onclick="setGender('male')">
+            <div class="go-img"><img id="hiccup-opt-img" src="" onerror="this.style.display='none'"><div class="go-img-fallback" id="hiccup-fallback">⚔️</div></div>
+            <div class="go-name">Hiccup</div>
+            <div class="go-desc">HE / HIM</div>
+          </div>
+          <div class="gender-opt" id="opt-female" onclick="setGender('female')">
+            <div class="go-img"><img id="astrid-opt-img" src="" onerror="this.style.display='none'"><div class="go-img-fallback" id="astrid-fallback">🛡️</div></div>
+            <div class="go-name">Astrid</div>
+            <div class="go-desc">SHE / HER</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="saveProfile()">✓ SAVE PROFILE</button>
+      <div class="saved-msg" id="save-msg">✓ SAVED — WELCOME, RIDER!</div>
+    </div>
+
+    <!-- Gemini API -->
+    <div class="settings-section">
+      <div class="ss-title">🤖 AI Guide (Gemini)</div>
+      <div class="api-notice">
+        Your AI guide (Hiccup or Astrid) uses Google Gemini to answer your questions.<br>
+        Get a <b>free</b> API key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a><br>
+        Your key is stored only in your browser — never sent to our servers.
+      </div>
+      <div class="form-row">
+        <label class="form-lbl">Gemini API Key</label>
+        <div class="api-key-wrap">
+          <input class="form-inp" id="inp-key" type="password" placeholder="AIza...">
+          <button class="show-btn" onclick="toggleKey()">SHOW</button>
+        </div>
+      </div>
+      <button class="save-btn" style="background:var(--fire2);color:#fff" onclick="saveKey()">✓ SAVE API KEY</button>
+      <div class="saved-msg" id="key-msg" style="color:var(--fire2)">✓ API KEY SAVED!</div>
+    </div>
+
+    <!-- Reset -->
+    <div class="settings-section">
+      <div class="ss-title">⚠️ Reset Data</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+        Clear your learning progress, streaks or timer history. This cannot be undone.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="resetWatched()">Reset Lesson Progress</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetStreak()">Reset Streak</button>
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:#e05555" onclick="resetAll()">⚠ RESET ALL</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="assets/data.js"></script>
+<script>
+// ── Load ──
+var profile  = JSON.parse(localStorage.getItem('nfl-profile')  || '{"name":"Dragon Rider","gender":"male"}');
+var geminiKey = localStorage.getItem('nfl-gemini-key') || '';
+var watched  = new Set(JSON.parse(localStorage.getItem('nf-watched') || '[]'));
+var studyLog = JSON.parse(localStorage.getItem('nfl-study-log') || '{}');
+var timerSess= parseInt(localStorage.getItem('nfl-timer-sessions-today')||'0');
+
+var HICCUP_IMGS = [
+  'https://static.wikia.nocookie.net/how-to-train-your-dragon/images/c/cf/Hiccup_HTTYD_3.png',
+  'https://static.wikia.nocookie.net/how-to-train-your-dragon/images/e/e4/Hiccup_HTTYD2_render.png'
+];
+var ASTRID_IMGS = [
+  'https://static.wikia.nocookie.net/how-to-train-your-dragon/images/a/a8/Astrid_Hofferson_HTTYD3.png',
+  'https://static.wikia.nocookie.net/how-to-train-your-dragon/images/0/04/Astrid_Hofferson.png'
+];
+
+function tryImg(el,fallback,urls,i){
+  if(!urls||i>=urls.length){if(el)el.style.display='none';if(fallback)fallback.style.display='';return;}
+  el.src=urls[i];
+  el.onload=function(){el.style.display='block';if(fallback)fallback.style.display='none';};
+  el.onerror=function(){tryImg(el,fallback,urls,i+1);};
+}
+
+// ── Populate form ──
+document.getElementById('inp-name').value = profile.name||'';
+document.getElementById('inp-key').value  = geminiKey;
+
+var curGender = profile.gender||'male';
+tryImg(document.getElementById('hiccup-opt-img'), document.getElementById('hiccup-fallback'), HICCUP_IMGS, 0);
+tryImg(document.getElementById('astrid-opt-img'), document.getElementById('astrid-fallback'), ASTRID_IMGS, 0);
+setGender(curGender, true);
+
+function setGender(g, init){
+  curGender=g;
+  document.getElementById('opt-male').className  = 'gender-opt'+(g==='male'?' sel-m':'');
+  document.getElementById('opt-female').className= 'gender-opt'+(g==='female'?' sel-f':'');
+  // Update profile card
+  var imgs=g==='male'?HICCUP_IMGS:ASTRID_IMGS;
+  var emoji=g==='male'?'⚔️':'🛡️';
+  document.getElementById('pc-av-emoji').textContent=emoji;
+  tryImg(document.getElementById('pc-av-img'),document.getElementById('pc-av-emoji'),imgs,0);
+  if(!init) document.getElementById('pc-name-big').textContent=document.getElementById('inp-name').value||'Dragon Rider';
+}
+
+document.getElementById('inp-name').oninput=function(){
+  document.getElementById('pc-name-big').textContent=this.value||'Dragon Rider';
+};
+
+// ── Stats ──
+var totalLessons=NF.COURSES.reduce(function(a,c){return a+c.lessons.length;},0);
+var done=watched.size, pct=Math.round(done/totalLessons*100);
+document.getElementById('pcs-done').textContent=done;
+document.getElementById('pcs-pct').textContent=pct+'%';
+document.getElementById('pcs-sessions').textContent=timerSess;
+
+function calcStreak(){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var s=0;
+  for(var i=0;i<365;i++){
+    var d=new Date(today); d.setDate(d.getDate()-i);
+    var k=d.toISOString().split('T')[0];
+    if(studyLog[k])s++; else if(i>0)break;
+  }
+  return s;
+}
+var streak=calcStreak();
+document.getElementById('pcs-streak').textContent=streak;
+
+// Level
+function getCurrentDragon(){
+  var dr=null;
+  NF.CLASSES.forEach(function(cls){cls.dragons.forEach(function(d){if(pct>=d.minPct)dr={d:d,c:cls};});});
+  return dr||{d:NF.CLASSES[0].dragons[0],c:NF.CLASSES[0]};
+}
+var cur=getCurrentDragon();
+document.getElementById('pc-class-txt').textContent='◆ '+cur.c.name+' — '+cur.d.name;
+document.getElementById('pc-class-txt').style.color=cur.c.textColor;
+
+// ── Save ──
+window.saveProfile=function(){
+  var nm=document.getElementById('inp-name').value.trim()||'Dragon Rider';
+  localStorage.setItem('nfl-profile',JSON.stringify({name:nm,gender:curGender}));
+  var msg=document.getElementById('save-msg');
+  msg.textContent='✓ SAVED — WELCOME, '+nm.toUpperCase()+'!';
+  msg.style.opacity=1; setTimeout(function(){msg.style.opacity=0;},2500);
+};
+window.saveKey=function(){
+  localStorage.setItem('nfl-gemini-key', document.getElementById('inp-key').value.trim());
+  var msg=document.getElementById('key-msg');
+  msg.style.opacity=1; setTimeout(function(){msg.style.opacity=0;},2500);
+};
+window.toggleKey=function(){
+  var i=document.getElementById('inp-key');
+  i.type=i.type==='password'?'text':'password';
+  event.target.textContent=i.type==='password'?'SHOW':'HIDE';
+};
+window.resetWatched=function(){if(!confirm('Reset all lesson progress?'))return;localStorage.removeItem('nf-watched');location.reload();};
+window.resetStreak=function(){if(!confirm('Reset streak?'))return;localStorage.removeItem('nfl-study-log');location.reload();};
+window.resetAll=function(){
+  if(!confirm('RESET EVERYTHING? This is permanent.'))return;
+  ['nf-watched','nfl-study-log','nfl-timer-sessions-today','nfl-design'].forEach(function(k){localStorage.removeItem(k);});
+  location.reload();
+};
+</script>
+</body>
+</html>
